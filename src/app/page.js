@@ -207,10 +207,11 @@ export default async function Home({ searchParams }) {
           className="
             pointer-events-none
             absolute inset-0
-            md:hidden
-            bg-no-repeat bg-cover-z-10
-            calendar-mobile-bg 
-          "
+    md:hidden
+    bg-no-repeat bg-cover
+    -z-10
+    calendar-mobile-bg 
+  "
           style={{
             backgroundImage: `url("${bgImageUrlMobile}")`,
           }}

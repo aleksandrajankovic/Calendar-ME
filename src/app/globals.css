@@ -254,6 +254,6 @@ button {
 
 @media (min-width: 430px) and (max-width: 767px) {
   .calendar-mobile-bg {
-    background-position: center -80px; /* više gore */
+    background-position: center -80px;
   }
 }

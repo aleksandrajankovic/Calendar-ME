@@ -3,9 +3,9 @@
 // -----------------------------
 // RENDER MODALA
 // -----------------------------
-function renderModalHTML(entry, lang = "sr") {
+function renderModalHTML(entry, lang = "me") {
   if (!entry) {
-    return lang === "sr"
+    return lang === "me"
       ? "<p>Ne postoje promocije za ovaj dan.</p>"
       : "<p>No promotions for this day.</p>";
   }
@@ -22,7 +22,7 @@ function renderModalHTML(entry, lang = "sr") {
 
   // ako baš nemamo nikakav sadržaj
   if (!promo && !richHtml) {
-    return lang === "sr"
+    return lang === "me"
       ? "<p>Ne postoje promocije za ovaj dan.</p>"
       : "<p>No promotions for this day.</p>";
   }
@@ -42,9 +42,9 @@ function renderModalHTML(entry, lang = "sr") {
   // --- kategorija (žuti label) ---
   let categoryLabel;
   if (type === "special") {
-    categoryLabel = lang === "sr" ? "Ekskluzivna promocija" : "Special promotion";
+    categoryLabel = lang === "me" ? "Ekskluzivna promocija" : "Special promotion";
   } else {
-    categoryLabel = lang === "sr" ? "Nedeljna promocija" : "Weekly promotion";
+    categoryLabel = lang === "me" ? "Nedeljna promocija" : "Weekly promotion";
   }
 
   // --- button ---
@@ -54,7 +54,7 @@ function renderModalHTML(entry, lang = "sr") {
   const isYellow = buttonColor === "yellow";
 
   const defaultButtonLabel =
-    button || (lang === "sr" ? "Registruj se" : "Register");
+    button || (lang === "me" ? "Registruj se" : "Register");
 
   // --- HTML struktura: slika → title → žuti label → opis → dugme ---
   return `
