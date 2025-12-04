@@ -4,10 +4,10 @@
 import { useState, useRef, useEffect } from "react";
 
 const LANG_META = {
-  sr: {
+  me: {
     flag: "/img/sr.svg",      
-    alt: "Srpski (Srbija)",
-    label: "RS",
+    alt: "Crnogorski (Crna Gora)",
+    label: "ME",
   },
   en: {
     flag: "/img/en.svg",
@@ -20,7 +20,7 @@ export default function LangSwitcher({ year, month, lang, allowedLangs }) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
 
-  const activeMeta = LANG_META[lang] ?? LANG_META.pt;
+  const activeMeta = LANG_META[lang] ?? LANG_META.me;
   const buildHref = (lng) => `/?y=${year}&m=${month}&lang=${lng}`;
 
   // zatvori dropdown na klik van

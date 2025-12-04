@@ -80,7 +80,7 @@ function normalizeSpecials(rows = [], lang) {
 }
 
 function getMonthLabel(year, month, lang) {
-  const locale = lang === "sr" ? "sr-Latn-RS" : "en-US";
+  const locale = lang === "me" ? "sr-Latn-ME" : "en-US";
   const raw = new Date(year, month, 1).toLocaleString(locale, {
     month: "long",
   });
@@ -103,8 +103,8 @@ export default async function Home({ searchParams }) {
   const mRaw = getParam(sp, "m");
   const langRaw = getParam(sp, "lang");
 
-  const ALLOWED_LANGS = ["sr", "en"];
-  const lang = ALLOWED_LANGS.includes(langRaw) ? langRaw : "sr";
+  const ALLOWED_LANGS = ["me", "en"];
+  const lang = ALLOWED_LANGS.includes(langRaw) ? langRaw : "me";
 
   const reqYear = Number.parseInt(yRaw ?? "", 10);
   const reqMonth = Number.parseInt(mRaw ?? "", 10);
@@ -203,19 +203,18 @@ export default async function Home({ searchParams }) {
         style={{ backgroundImage: `url("${bgImageUrl}")` }} // desktop bg
       >
         {/* MOBILE BG – ispod sadržaja */}
-      <div
-  className="
-    pointer-events-none
-    absolute inset-0
-    md:hidden
-    bg-no-repeat bg-cover
-    -z-10
-    calendar-mobile-bg 
-  "
-  style={{
-    backgroundImage: `url("${bgImageUrlMobile}")`,
-  }}
-/>
+        <div
+          className="
+            pointer-events-none
+            absolute inset-0
+            md:hidden
+            bg-no-repeat bg-cover-z-10
+            calendar-mobile-bg 
+          "
+          style={{
+            backgroundImage: `url("${bgImageUrlMobile}")`,
+          }}
+        />
 
         <SnowOverlay />
 
@@ -231,7 +230,7 @@ export default async function Home({ searchParams }) {
           "
         >
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white md:text-left text-center">
-            {lang === "sr" ? "Kalendar Promocija" : "Promotion Calendar"}
+            {lang === "me" ? "Kalendar Promocija" : "Promotion Calendar"}
           </h1>
 
           {isAdmin && (
