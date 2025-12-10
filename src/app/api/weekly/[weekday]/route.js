@@ -2,8 +2,8 @@
 export const runtime = "nodejs";
 import prisma from "@/lib/db";
 
-const DEFAULT_LANG = "pt"; // ili šta ti već treba
-
+const DEFAULT_LANG = "ba";
+export const revalidate = 3600;
 // helper: pročitaj ID admina iz cookie-ja
 function getAdminIdFromCookie(req) {
   const cookieHeader = req.headers.get("cookie") || "";

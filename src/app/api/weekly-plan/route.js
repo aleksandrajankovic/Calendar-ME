@@ -22,7 +22,6 @@ function requireAnyAdmin(req) {
 }
 
 // GET /api/weekly-plan?year=YYYY&month=MM
-// ovo je ok da ostane public, za front
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
 
