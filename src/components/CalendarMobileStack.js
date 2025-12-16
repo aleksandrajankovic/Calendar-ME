@@ -120,9 +120,7 @@ export default function CalendarMobileStack({ adminPreview = false }) {
           const locked = day.isLocked && !adminPreview;
           const category = day.category || "ALL";
           const isGhost = Boolean(day.isGhost);
-          const gradientClass = locked
-            ? "bg-black"
-            : getCategoryGradient(category);
+          const gradientClass = getCategoryGradient(category);
 
           const isTodayActive = day.isToday && !isGhost;
 
