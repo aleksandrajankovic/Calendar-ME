@@ -140,7 +140,7 @@ export default function CalendarMobileStack({ adminPreview = false }) {
                 absolute top-0
                 left-0
                 w-[230px] h-[257px]
-                overflow-hidden
+              
                 rounded-[18px]
                 
                 ${
