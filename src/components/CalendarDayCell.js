@@ -22,7 +22,7 @@ export default function CalendarDayCell({ cell, lang, adminPreview }) {
   const category = cell.category || "ALL";
   const categoryLabel = getCategoryLabel(category);
 
-  const gradientClass = locked ? "bg-black" : getCategoryGradient(category);
+  const gradientClass = getCategoryGradient(category);
 
   return (
     <div className="relative h-full w-full rounded-[12px]">
@@ -70,25 +70,37 @@ export default function CalendarDayCell({ cell, lang, adminPreview }) {
 
         {/* ikonica / lock */}
         {!locked && cell.hasPromo && cell.icon ? (
+          // otključan dan – samo promo ikonica
           <img
             src={cell.icon}
             alt="promo icon"
-            className=" absolute right-0 inset-y-0
+            className="absolute right-0 inset-y-0
               h-full w-[90%]
               object-contain object-right"
             loading="lazy"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="flex items-center justify-center w-9 h-9 rounded-full bg-black/35">
+          <>
+            {/* ikonica u pozadini, ako postoji */}
+            {cell.icon && (
               <img
-                src="./img/lock.png"
-                alt="default promo icon"
-                className="w-5 h-5 object-contain"
+                src={cell.icon}
+                alt="promo icon"
+                className="absolute right-0 inset-y-0
+                  h-full w-[90%]
+                  object-contain object-right"
                 loading="lazy"
               />
-            </div>
-          </div>
+            )}
+
+            {/* overlay + lock samo kad je zaključan dan */}
+            {locked && (
+              <div
+                className="absolute inset-0 pointer-events-none bg-[#00000080] bg-center bg-no-repeat"
+                style={{ backgroundImage: "url('./img/lock.png')" }}
+              />
+            )}
+          </>
         )}
       </button>
     </div>

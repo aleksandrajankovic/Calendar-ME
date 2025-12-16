@@ -98,12 +98,12 @@ export default function CalendarMobileStack({ adminPreview = false }) {
   if (!days.length) return null;
 
   // horizontalni layout
-  const MAX_OFFSET = 1;       
+  const MAX_OFFSET = 1;
   const CARD_WIDTH = 230;
   const CARD_HEIGHT = 257;
   const TRACK_WIDTH = 380;
   const ACTIVE_X = TRACK_WIDTH / 2 - CARD_WIDTH / 2;
-  const CARD_GAP = 170;         
+  const CARD_GAP = 170;
 
   return (
     <div className="w-full flex flex-col items-center mt-[20px]">
@@ -120,19 +120,14 @@ export default function CalendarMobileStack({ adminPreview = false }) {
           const locked = day.isLocked && !adminPreview;
           const category = day.category || "ALL";
           const isGhost = Boolean(day.isGhost);
-          const gradientClass = locked
-            ? "bg-black"
-            : getCategoryGradient(category);
+          const gradientClass = getCategoryGradient(category);
 
           const isTodayActive = day.isToday && !isGhost;
 
           const translateX = ACTIVE_X + offset * CARD_GAP;
-          const scale =
-            offset === 0
-              ? 1
-              : 0.9; // side cards slightly smaller
+          const scale = offset === 0 ? 1 : 0.9; // side cards slightly smaller
           const zIndex = MAX_OFFSET - Math.abs(offset);
-          const opacity = offset === 0 ? 1 : 0.45; 
+          const opacity = offset === 0 ? 1 : 0.45;
 
           return (
             <button
@@ -187,37 +182,42 @@ export default function CalendarMobileStack({ adminPreview = false }) {
               </span>
 
               {/* slika / ikonice – malo “ispada” van boxa */}
-              {!isGhost &&
-                (!locked && day.hasPromo && day.icon ? (
-                  <img
-                    src={day.icon}
-                    alt="promo icon"
-                    className="
-                      absolute
-                      inset-y-[-55px]
-                      h-[100%]
-                      w-auto
-                      object-cover
-                      object-center
-                      drop-shadow-[0_12px_25px_rgba(0,0,0,0.7)]
-                    "
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="flex items-center justify-center w-9 h-9 rounded-full bg-black/35">
-                      <img
-                        src="./img/lock.png"
-                        alt="default promo icon"
-                        className="w-10 h-10 object-contain"
-                        loading="lazy"
-                      />
-                    </div>
-                  </div>
-                ))}
-
               {!isGhost && (
-                <div className="absolute inset-0" />
+                <>
+                  {!locked && day.hasPromo && day.icon ? (
+                    <img
+                      src={day.icon}
+                      alt="promo icon"
+                      className="absolute right-0 inset-y-0
+          h-full w-[90%]
+          object-contain object-right"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <>
+                      {day.icon && (
+                        <img
+                          src={day.icon}
+                          alt="promo icon"
+                          className="absolute right-0 inset-y-0
+              h-full w-[90%]
+              object-contain object-right"
+                          loading="lazy"
+                        />
+                      )}
+
+                      {locked && (
+                        <div className="absolute inset-0 pointer-events-none">
+                          <div className="absolute inset-0 bg-[#00000080]" />
+                          <div
+                            className="absolute inset-0 bg-center bg-no-repeat bg-[length:44px_44px]"
+                            style={{ backgroundImage: "url('./img/lock.png')" }}
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
+                </>
               )}
             </button>
           );
