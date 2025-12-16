@@ -248,12 +248,12 @@ button {
   }
 }
 .calendar-mobile-bg {
-  background-position: center -60px;
+  background-position: center 0px;
 }
 
 
 @media (min-width: 430px) and (max-width: 767px) {
   .calendar-mobile-bg {
-    background-position: center -80px;
+    background-position: center 0px;
   }
 }
