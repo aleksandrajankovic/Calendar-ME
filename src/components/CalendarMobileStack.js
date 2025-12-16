@@ -142,6 +142,7 @@ export default function CalendarMobileStack({ adminPreview = false }) {
                 absolute top-0
                 left-0
                 w-[230px] h-[257px]
+                overflow-hidden
                 rounded-[18px]
                 
                 ${
@@ -215,7 +216,7 @@ export default function CalendarMobileStack({ adminPreview = false }) {
                       )}
 
                       {locked && (
-                        <div className="absolute inset-0 pointer-events-none">
+                        <div className="absolute z-20 inset-0 pointer-events-none">
                           <div className="absolute inset-0 bg-[#00000080]" />
                           <div
                             className="absolute inset-0 bg-center bg-no-repeat bg-[length:44px_44px]"
