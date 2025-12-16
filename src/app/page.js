@@ -202,16 +202,9 @@ export default async function Home({ searchParams }) {
         "
         style={{ backgroundImage: `url("${bgImageUrl}")` }} // desktop bg
       >
-        {/* MOBILE BG – ispod sadržaja */}
+        {/* MOBILE BG */}
         <div
-          className="
-            pointer-events-none
-            absolute inset-0
-    md:hidden
-    bg-no-repeat bg-cover
-    -z-10
-    calendar-mobile-bg 
-  "
+          className="pointer-events-none absolute inset-0 md:hidden bg-no-repeat bg-cover -z-10 calendar-mobile-bg"
           style={{
             backgroundImage: `url("${bgImageUrlMobile}")`,
           }}
@@ -231,7 +224,7 @@ export default async function Home({ searchParams }) {
           "
         >
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white md:text-left text-center">
-            {lang === "me" ? "Kalendar Promocija" : "Promotion Calendar"}
+            {lang === "me" ? "PRAZNIČNE MISIJE❄️" : "HOLIDAY MISSIONS"}
           </h1>
 
           {isAdmin && (
