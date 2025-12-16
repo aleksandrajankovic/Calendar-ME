@@ -120,7 +120,9 @@ export default function CalendarMobileStack({ adminPreview = false }) {
           const locked = day.isLocked && !adminPreview;
           const category = day.category || "ALL";
           const isGhost = Boolean(day.isGhost);
-          const gradientClass = getCategoryGradient(category);
+          const gradientClass = locked
+            ? "bg-black"
+            : getCategoryGradient(category);
 
           const isTodayActive = day.isToday && !isGhost;
 
@@ -188,9 +190,15 @@ export default function CalendarMobileStack({ adminPreview = false }) {
                     <img
                       src={day.icon}
                       alt="promo icon"
-                      className="absolute right-0 inset-y-0
-          h-full w-[90%]
-          object-contain object-right"
+                      className="
+                      absolute
+                      inset-y-[-55px]
+                      h-[100%]
+                      w-auto
+                      object-cover
+                      object-center
+                      drop-shadow-[0_12px_25px_rgba(0,0,0,0.7)]
+                    "
                       loading="lazy"
                     />
                   ) : (
