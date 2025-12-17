@@ -167,7 +167,7 @@ export default async function Home({ searchParams }) {
       <div className="min-h-[100dvh] flex flex-col overflow-hidden">
         <header className="w-full bg-[linear-gradient(90deg,#A6080E_0%,#D11101_100%)] px-4 md:px-8 py-2 flex items-center justify-between shrink-0">
           <a
-            href="https://meridianbet.rs"
+            href="https://meridianbet.me"
             target="_blank"
             rel="noreferrer"
             aria-label="Meridianbet main site"
