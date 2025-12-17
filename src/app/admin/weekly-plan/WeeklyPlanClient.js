@@ -1,15 +1,12 @@
 // app/admin/weekly-plan/page.jsx
 "use client";
 
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useWeeklyPlan } from "./useWeeklyPlan";
 import WeeklyEditor from "../weekly/components/WeeklyEditor";
 import AdminTableCard from "../components/AdminTableCard";
-import {
-  StatusToggleButton,
-  IconButton,
-} from "../components/AdminTableButtons";
+import { StatusToggleButton, IconButton } from "../components/AdminTableButtons";
 import { confirmDeleteToast } from "../components/ConfirmDeleteToast";
 
 const LABELS = [
@@ -24,6 +21,7 @@ const LABELS = [
 
 export default function WeeklyPlanAdmin() {
   const sp = useSearchParams();
+  const router = useRouter();
   const now = new Date();
 
   const y0 = Number.parseInt(sp.get("y") ?? "", 10);
@@ -32,9 +30,28 @@ export default function WeeklyPlanAdmin() {
   const [year, setYear] = useState(
     Number.isInteger(y0) ? y0 : now.getFullYear()
   );
+
   const [month, setMonth] = useState(
-    Number.isInteger(m0) && m0 >= 0 && m0 <= 11 ? m0 : (now.getMonth() + 1) % 12
+    Number.isInteger(m0) && m0 >= 0 && m0 <= 11 ? m0 : now.getMonth()
   );
+
+  // helper: sinhronizuj URL sa year/month
+  function setYM(nextY, nextM) {
+    const params = new URLSearchParams(sp.toString());
+    params.set("y", String(nextY));
+    params.set("m", String(nextM));
+    router.replace(`?${params.toString()}`);
+  }
+
+  // Ako korisnik ručno promeni URL ili dođe sa linka, sinhronizuj state
+  useEffect(() => {
+    const yy = Number.parseInt(sp.get("y") ?? "", 10);
+    const mm = Number.parseInt(sp.get("m") ?? "", 10);
+
+    if (Number.isInteger(yy) && yy !== year) setYear(yy);
+    if (Number.isInteger(mm) && mm >= 0 && mm <= 11 && mm !== month) setMonth(mm);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sp]);
 
   const { rows, loading, error, upsert, remove } = useWeeklyPlan(year, month);
   const [editing, setEditing] = useState(null); // weekday 0..6
@@ -78,13 +95,14 @@ export default function WeeklyPlanAdmin() {
     "grid grid-cols-1 sm:grid-cols-[120px_1fr] " +
     "lg:grid-cols-[120px_1fr_1.5fr_120px_120px_160px]";
 
+  // godine koje nudimo u dropdown-u (npr: prošla + naredne 4)
+  const yearOptions = Array.from({ length: 3 }, (_, i) => now.getFullYear() - 1 + i);
+
   return (
     <>
       {/* Naslov + opis */}
       <div className="mb-2">
-        <h1 className="text-xl font-semibold">
-          Backoffice - Monthly Promotions
-        </h1>
+        <h1 className="text-xl font-semibold">Backoffice - Monthly Promotions</h1>
         <p className="text-sm text-neutral-500">
           Review and edit weekly promotions for the selected month{" "}
         </p>
@@ -93,22 +111,43 @@ export default function WeeklyPlanAdmin() {
       <AdminTableCard
         title="Weekly Promotions"
         headerRight={
-          <>
+          <div className="flex items-center gap-2">
+            {/* Year */}
+            <select
+              className="border border-neutral-300 rounded px-2 py-1 text-sm text-black bg-white"
+              value={year}
+              onChange={(e) => {
+                const nextY = Number(e.target.value);
+                setYear(nextY);
+                setYM(nextY, month);
+              }}
+              aria-label="Select year"
+            >
+              {yearOptions.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+
             {/* Month */}
             <select
               className="border border-neutral-300 rounded px-2 py-1 text-sm text-black bg-white"
               value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
+              onChange={(e) => {
+                const nextM = Number(e.target.value);
+                setMonth(nextM);
+                setYM(year, nextM);
+              }}
+              aria-label="Select month"
             >
               {Array.from({ length: 12 }, (_, i) => (
                 <option key={i} value={i}>
-                  {new Date(2000, i, 1).toLocaleString("en", {
-                    month: "long",
-                  })}
+                  {new Date(2000, i, 1).toLocaleString("en", { month: "long" })}
                 </option>
               ))}
             </select>
-          </>
+          </div>
         }
         columns={[
           { key: "day", label: "Day", width: "120px" },
@@ -153,6 +192,7 @@ export default function WeeklyPlanAdmin() {
                         href={r.link}
                         className="underline decoration-neutral-300 hover:decoration-neutral-500"
                         target="_blank"
+                        rel="noreferrer"
                       >
                         {r.link}
                       </a>

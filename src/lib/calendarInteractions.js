@@ -44,7 +44,7 @@ function renderModalHTML(entry, lang = "me") {
   if (type === "special") {
     categoryLabel = lang === "me" ? "Ekskluzivna promocija" : "Special promotion";
   } else {
-    categoryLabel = lang === "me" ? "Nedeljna promocija" : "Weekly promotion";
+    categoryLabel = lang === "me" ? "Nedjeljna promocija" : "Weekly promotion";
   }
 
   // --- button ---
@@ -56,7 +56,7 @@ function renderModalHTML(entry, lang = "me") {
   const defaultButtonLabel =
     button || (lang === "me" ? "Registruj se" : "Register");
 
-  // --- HTML struktura: slika → title → žuti label → opis → dugme ---
+
   return `
     <div class="flex flex-col w-full max-w-[420px] mx-auto">
       ${
