@@ -152,7 +152,7 @@ export default async function Home({ searchParams }) {
 
   const specials = normalizeSpecials(specialRows, lang);
 
-  // background za kalendar – desktop + mobile
+  // background za kalendar 
   const bgImageUrl = calendarSettings?.bgImageUrl || "/img/bg-calendar.png";
   const bgImageUrlMobile = calendarSettings?.bgImageUrlMobile || bgImageUrl;
 
@@ -163,19 +163,19 @@ export default async function Home({ searchParams }) {
 
   return (
     <>
-      {/* TOP HEADER BAR – crveni, logo levo, lang switcher desno */}
+      {/* TOP HEADER BAR */}
       <div className="min-h-[100dvh] flex flex-col overflow-hidden">
         <header className="w-full bg-[linear-gradient(90deg,#A6080E_0%,#D11101_100%)] px-4 md:px-8 py-2 flex items-center justify-between shrink-0">
           <a
             href="https://meridianbet.me"
             target="_blank"
             rel="noreferrer"
-            aria-label="Meridianbet main site"
+            aria-label="Meridianbet Calendar main site"
           >
             <img
-              src="/img/logo.svg"
+              src="/img/meridianbet-ng.png"
               alt="Meridianbet"
-              className="h-6 md:h-7 w-auto"
+              className="h-10 md:h-[50px] w-auto"
             />
           </a>
 
@@ -229,7 +229,7 @@ export default async function Home({ searchParams }) {
               </div>
             )}
 
-            {/* MOBILE PAGINATION – IZNAD kalendara */}
+            {/* MOBILE PAGINATION */}
             <div className="mt-6 flex items-center justify-center md:hidden">
               <div className="inline-flex items-center gap-4 rounded-full bg-black/40 px-4 py-2 text-white text-sm">
                 <a
@@ -254,7 +254,7 @@ export default async function Home({ searchParams }) {
               </div>
             </div>
 
-            {/* kalendar malo odvojen od naslova */}
+           
             <div className="mt-6">
               <CalendarGrid
                 year={year}
@@ -268,7 +268,7 @@ export default async function Home({ searchParams }) {
 
             <CalendarEnhancer adminPreview={isAdmin} lang={lang} />
 
-            {/* MONTH PAGINATION – ispod kalendara (desktop) */}
+            {/* MONTH PAGINATION  */}
             <div className="mt-6 md:flex items-center justify-center hidden">
               <div className="inline-flex items-center gap-4 rounded-full bg-black/40 px-4 py-2 text-white text-sm md:text-base">
                 <a

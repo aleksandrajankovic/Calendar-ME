@@ -95,7 +95,7 @@ export default function WeeklyPlanAdmin() {
     "grid grid-cols-1 sm:grid-cols-[120px_1fr] " +
     "lg:grid-cols-[120px_1fr_1.5fr_120px_120px_160px]";
 
-  // godine koje nudimo u dropdown-u (npr: prošla + naredne 4)
+ 
   const yearOptions = Array.from({ length: 3 }, (_, i) => now.getFullYear() - 1 + i);
 
   return (
