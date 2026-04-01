@@ -33,7 +33,7 @@ export function useWeeklyPlan(year, month) {
         link: payload.link ?? "",
         rich: payload.rich ?? null,
         richHtml: payload.richHtml ?? "",
-
+        scratch: !!payload.scratch,
         active: !!payload.active,
         icon: payload.icon ?? "",
         buttonColor: payload.buttonColor ?? "green",

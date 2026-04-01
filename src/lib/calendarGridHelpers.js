@@ -7,7 +7,6 @@ function asArray(x) {
   return [];
 }
 
-// specials → map po danu
 function indexSpecialsForMonth(specials, year, month) {
   const map = new Map();
   for (const sp of asArray(specials)) {
@@ -24,8 +23,8 @@ function pickPromoForDate(date, weekly, specialsMap) {
   if (sp) return { promo: sp, type: "special" };
 
   let wd = date.getDay(); // 0..6 (Sun..Sat)
-  if (wd === 0) wd = 7;   // Sun -> 7
-  wd = wd - 1;            // 0..6 (Mon..Sun)
+  if (wd === 0) wd = 7; // Sun -> 7
+  wd = wd - 1; // 0..6 (Mon..Sun)
 
   const w = asArray(weekly)[wd];
   if (w && w.active) return { promo: w, type: "weekly" };
@@ -44,7 +43,7 @@ export function buildCalendarData({
 }) {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
-  const startDay = firstDay === 0 ? 7 : firstDay; // 1..7 (Mon..Sun)
+  const startDay = firstDay === 0 ? 7 : firstDay;
 
   const prevMonthDays = new Date(year, month, 0).getDate();
   const specialsMap = indexSpecialsForMonth(specials, year, month);
@@ -52,7 +51,6 @@ export function buildCalendarData({
   const cells = [];
   const daysPayload = [];
 
-  // LEADING – dani prethodnog meseca
   const leadingDays = startDay - 1;
   for (let i = 0; i < leadingDays; i++) {
     const dayNum = prevMonthDays - leadingDays + 1 + i;
@@ -63,26 +61,24 @@ export function buildCalendarData({
     });
   }
 
-  // GLAVNI – dani tekućeg meseca
   for (let day = 1; day <= daysInMonth; day++) {
     const d = new Date(year, month, day);
     const isFuture = d > today;
     const isToday = d.toDateString() === today.toDateString();
 
     const { promo, type } = pickPromoForDate(d, weekly, specialsMap);
-    const icon =
-      promo?.icon && String(promo.icon).trim() ? promo.icon : null;
+    const icon = promo?.icon && String(promo.icon).trim() ? promo.icon : null;
 
     const shareUrl = promo
       ? buildPromoUrlISO(d, promo.title || slugify("promocao"))
       : null;
 
     const isFutureForUx = adminPreview ? false : isFuture && !isToday;
-    const isLocked = adminPreview ? false : (!promo || isFutureForUx);
+    const isLocked = adminPreview ? false : !promo || isFutureForUx;
 
     const category = promo?.category || "ALL";
+    const scratch = !!promo?.scratch;
 
-    // cell za grid (desktop)
     cells.push({
       type: "day",
       key: `day-${day}`,
@@ -95,7 +91,6 @@ export function buildCalendarData({
       category,
     });
 
-    // payload za JS (modal + mobile)
     const title = promo?.title || "";
     const richHtml = promo?.richHtml || null;
     const link = promo?.link || "#";
@@ -115,8 +110,8 @@ export function buildCalendarData({
       button,
       buttonColor,
       category,
+      scratch,
 
-   
       hasPromo: Boolean(promo),
       isToday,
       isFutureForUx,
@@ -131,14 +126,13 @@ export function buildCalendarData({
             button,
             buttonColor,
             category,
-            icon, 
+            icon,
+            scratch,
           }
         : null,
     });
   }
 
-
-  // TRAILING – dani sledećeg meseca da se popuni poslednji red
   const totalCells = cells.length;
   const remainder = totalCells % 7;
   if (remainder !== 0) {

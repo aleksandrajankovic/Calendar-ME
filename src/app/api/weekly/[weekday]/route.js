@@ -4,6 +4,7 @@ import prisma from "@/lib/db";
 
 const DEFAULT_LANG = "ba";
 export const revalidate = 3600;
+
 // helper: pročitaj ID admina iz cookie-ja
 function getAdminIdFromCookie(req) {
   const cookieHeader = req.headers.get("cookie") || "";
@@ -42,6 +43,7 @@ export async function PUT(req, context) {
     link,
     buttonColor,
     active,
+    scratch,
 
     title,
     button,
@@ -67,7 +69,8 @@ export async function PUT(req, context) {
     link: mainT.link ?? link ?? "",
 
     icon: icon ?? "",
-    active: Boolean(active ?? true),
+    active: typeof active === "boolean" ? active : true,
+    scratch: !!scratch, 
     buttonColor: buttonColor || "green",
 
     translations: Object.keys(translations).length ? translations : null,
@@ -83,7 +86,7 @@ export async function PUT(req, context) {
   return Response.json(row);
 }
 
-// PATCH /api/weekly/:weekday  { active: boolean }
+// PATCH /api/weekly/:weekday  { active?: boolean, scratch?: boolean }
 export async function PATCH(req, context) {
   const { ok, status } = requireAnyAdmin(req);
   if (!ok) return new Response("unauthorized", { status });
@@ -93,12 +96,20 @@ export async function PATCH(req, context) {
   if (weekday === null) return new Response("bad weekday", { status: 400 });
 
   const body = await req.json().catch(() => ({}));
-  const next = Boolean(body.active);
+
+  const patch = {
+    ...(typeof body.active === "boolean" ? { active: body.active } : {}),
+    ...(typeof body.scratch === "boolean" ? { scratch: body.scratch } : {}),
+  };
+
+  if (Object.keys(patch).length === 0) {
+    return new Response("bad payload", { status: 400 });
+  }
 
   try {
     const row = await prisma.weeklyPromotion.update({
       where: { weekday },
-      data: { active: next },
+      data: patch,
     });
     return Response.json(row);
   } catch {

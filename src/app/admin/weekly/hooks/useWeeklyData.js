@@ -18,7 +18,7 @@ export function useWeeklyData() {
   async function patchActive(weekday, next) {
     const prev = rows;
     setRows((r) =>
-      r.map((x) => (x.weekday === weekday ? { ...x, active: next } : x))
+      r.map((x) => (x.weekday === weekday ? { ...x, active: next } : x)),
     );
     const res = await fetch(`/api/weekly/${weekday}`, {
       method: "PATCH",
@@ -56,7 +56,7 @@ export function useWeeklyData() {
         icon: payload.icon ?? "",
         active: !!payload.active,
         buttonColor: payload.buttonColor ?? "green",
-
+        scratch: !!payload.scratch,
         translations: payload.translations || null,
         defaultLang: payload.defaultLang || "pt",
 

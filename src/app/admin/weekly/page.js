@@ -37,6 +37,7 @@ export default function GlobalWeeklyPage() {
         active: true,
         buttonColor: "green",
         category: "ALL",
+        scratch: false,
       }
     );
   }, [editingDay, rows]);

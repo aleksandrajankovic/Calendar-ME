@@ -14,18 +14,21 @@ const robotoCondensed = Roboto_Condensed({
 });
 
 export const metadata = {
-  metadataBase: new URL("https://meridianbet.rs"),
+  metadataBase: new URL("https://calendar.meridianbet.me"),
+
   title: "Kalendar Promocija | Meridianbet",
   description:
     "Budite u toku sa dnevnim ponudama, otkrijte nove promocije i iskoristite ekskluzivne nagrade uz Meridianbet Kalendar Promocija.",
+
   alternates: {
-    canonical: "/calendar",
+    canonical: "https://calendar.meridianbet.me/",
   },
+
   openGraph: {
     title: "Kalendar Promocija | Meridianbet",
     description:
       "Budite u toku sa dnevnim ponudama, otkrijte nove promocije i iskoristite ekskluzivne nagrade uz Meridianbet Kalendar Promocija.",
-    url: "/calendar",
+    url: "https://calendar.meridianbet.me/",
     siteName: "Meridianbet",
     images: [
       {
@@ -35,9 +38,10 @@ export const metadata = {
         alt: "Kalendar Promocija",
       },
     ],
-    locale: "sr_RS",
+    locale: "sr_ME",
     type: "website",
   },
+
   twitter: {
     card: "summary_large_image",
     title: "Kalendar Promocija | Meridianbet",
@@ -45,12 +49,14 @@ export const metadata = {
       "Budite u toku sa dnevnim ponudama, otkrijte nove promocije i iskoristite ekskluzivne nagrade uz Meridianbet Kalendar Promocija.",
     images: ["https://cloud.merbet.com/Preview-image/calendar-universal.png"],
   },
+
   robots: {
     index: true,
     follow: true,
   },
+
   icons: {
-    icon: "/src/app/favicon.ico",
+    icon: "/favicon.ico",
   },
 };
 

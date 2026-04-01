@@ -6,7 +6,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useWeeklyPlan } from "./useWeeklyPlan";
 import WeeklyEditor from "../weekly/components/WeeklyEditor";
 import AdminTableCard from "../components/AdminTableCard";
-import { StatusToggleButton, IconButton } from "../components/AdminTableButtons";
+import {
+  StatusToggleButton,
+  IconButton,
+} from "../components/AdminTableButtons";
 import { confirmDeleteToast } from "../components/ConfirmDeleteToast";
 
 const LABELS = [
@@ -28,11 +31,11 @@ export default function WeeklyPlanAdmin() {
   const m0 = Number.parseInt(sp.get("m") ?? "", 10);
 
   const [year, setYear] = useState(
-    Number.isInteger(y0) ? y0 : now.getFullYear()
+    Number.isInteger(y0) ? y0 : now.getFullYear(),
   );
 
   const [month, setMonth] = useState(
-    Number.isInteger(m0) && m0 >= 0 && m0 <= 11 ? m0 : now.getMonth()
+    Number.isInteger(m0) && m0 >= 0 && m0 <= 11 ? m0 : now.getMonth(),
   );
 
   // helper: sinhronizuj URL sa year/month
@@ -49,7 +52,8 @@ export default function WeeklyPlanAdmin() {
     const mm = Number.parseInt(sp.get("m") ?? "", 10);
 
     if (Number.isInteger(yy) && yy !== year) setYear(yy);
-    if (Number.isInteger(mm) && mm >= 0 && mm <= 11 && mm !== month) setMonth(mm);
+    if (Number.isInteger(mm) && mm >= 0 && mm <= 11 && mm !== month)
+      setMonth(mm);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sp]);
 
@@ -73,6 +77,7 @@ export default function WeeklyPlanAdmin() {
         richHtml: null,
         buttonColor: "green",
         category: "ALL",
+        scratch: false,
       }
     );
   }, [editing, rows, year, month]);
@@ -95,14 +100,18 @@ export default function WeeklyPlanAdmin() {
     "grid grid-cols-1 sm:grid-cols-[120px_1fr] " +
     "lg:grid-cols-[120px_1fr_1.5fr_120px_120px_160px]";
 
- 
-  const yearOptions = Array.from({ length: 3 }, (_, i) => now.getFullYear() - 1 + i);
+  const yearOptions = Array.from(
+    { length: 3 },
+    (_, i) => now.getFullYear() - 1 + i,
+  );
 
   return (
     <>
       {/* Naslov + opis */}
       <div className="mb-2">
-        <h1 className="text-xl font-semibold">Backoffice - Monthly Promotions</h1>
+        <h1 className="text-xl font-semibold">
+          Backoffice - Monthly Promotions
+        </h1>
         <p className="text-sm text-neutral-500">
           Review and edit weekly promotions for the selected month{" "}
         </p>
@@ -230,7 +239,7 @@ export default function WeeklyPlanAdmin() {
                         variant="delete"
                         onClick={() =>
                           confirmDeleteToast(r.title || LABELS[wd], () =>
-                            remove(wd)
+                            remove(wd),
                           )
                         }
                         title="Delete"

@@ -183,7 +183,9 @@ button {
   max-width: 640px;
   width: 90%;
 }
-
+#scratch-canvas {
+  cursor: url("/img/coin.png") 16 16, pointer;
+}
 /* Admin može da klikne future */
 .admin-preview .future button,
 .admin-preview .future {
@@ -245,15 +247,5 @@ button {
   }
   100% {
     transform: translate3d(var(--drift, 0px), 110vh, 0);
-  }
-}
-.calendar-mobile-bg {
-  background-position: center 0px;
-}
-
-
-@media (min-width: 430px) and (max-width: 767px) {
-  .calendar-mobile-bg {
-    background-position: center 0px;
   }
 }

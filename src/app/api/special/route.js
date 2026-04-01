@@ -1,4 +1,3 @@
-// app/api/specials/route.js
 export const runtime = "nodejs";
 import prisma from "@/lib/db";
 
@@ -24,6 +23,7 @@ export async function GET(req) {
   const safe = rows.map((r) => ({
     ...r,
     richHtml: r.richHtml ?? null,
+    scratch: !!r.scratch,
   }));
 
   return Response.json(safe);
@@ -47,7 +47,7 @@ export async function POST(req) {
     link,
     buttonColor,
     active,
-
+    scratch, 
     title,
     button,
     rich,
@@ -74,7 +74,7 @@ export async function POST(req) {
   const created = await prisma.specialPromotion.create({
     data: {
       year,
-      month, // 0–11
+      month,
       day,
 
       title: mainT.title ?? title ?? "",
@@ -85,6 +85,7 @@ export async function POST(req) {
 
       icon: icon ?? "",
       active: typeof active === "boolean" ? active : true,
+      scratch: !!scratch, // ✅ dodato
       buttonColor: buttonColor || "green",
 
       translations: Object.keys(translations).length ? translations : null,

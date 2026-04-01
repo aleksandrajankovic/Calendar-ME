@@ -29,7 +29,7 @@ model WeeklyPromotion {
   buttonColor  String   @default("green")
   rich         Json?
   richHtml     String?
-
+scratch Boolean @default(false)
   translations Json?
 category     PromoCategory @default(ALL)
   @@unique([weekday])
@@ -48,7 +48,7 @@ model SpecialPromotion {
   buttonColor  String   @default("green")
   rich         Json?
   richHtml     String?
-
+scratch Boolean @default(false)
   translations Json?
   category     PromoCategory @default(ALL)
 }
@@ -66,7 +66,7 @@ model WeeklyPlan {
   rich        Json?
   richHtml    String?
   buttonColor String   @default("green")
-
+scratch Boolean @default(false)
   translations Json?
 category     PromoCategory @default(ALL)
   @@unique([year, month, weekday])

@@ -1,4 +1,3 @@
-// src/app/api/special/[id]/route.js
 export const runtime = "nodejs";
 import prisma from "@/lib/db";
 
@@ -13,13 +12,12 @@ function getAdminIdFromCookie(req) {
 }
 
 /* ---------- PUT /api/special/:id ---------- */
-// čuvanje / kreiranje special promocije
+// čuvanje / update special promocije
 export async function PUT(req, { params }) {
-  // dozvoli BILO KOG ulogovanog admina
   const adminId = getAdminIdFromCookie(req);
   if (!adminId) return new Response("unauthorized", { status: 401 });
 
-  const { id } = await params; // Next 16: params je Promise
+  const { id } = await params;
   const specialId = Number.parseInt(id, 10);
   if (!Number.isInteger(specialId)) {
     return new Response("bad id", { status: 400 });
@@ -35,6 +33,7 @@ export async function PUT(req, { params }) {
     link,
     buttonColor,
     active,
+    scratch,
     title,
     button,
     rich,
@@ -68,6 +67,7 @@ export async function PUT(req, { params }) {
 
     icon: icon ?? "",
     active: !!active,
+    scratch: !!scratch,
     buttonColor: buttonColor || "green",
 
     translations: Object.keys(translations).length ? translations : null,
@@ -84,7 +84,7 @@ export async function PUT(req, { params }) {
 }
 
 /* ---------- PATCH /api/special/:id ---------- */
-// toggle active
+// toggle active / scratch
 export async function PATCH(req, { params }) {
   const adminId = getAdminIdFromCookie(req);
   if (!adminId) return new Response("unauthorized", { status: 401 });
@@ -96,12 +96,20 @@ export async function PATCH(req, { params }) {
   }
 
   const body = await req.json().catch(() => ({}));
-  const next = Boolean(body.active);
+
+  const patch = {
+    ...(typeof body.active === "boolean" ? { active: body.active } : {}),
+    ...(typeof body.scratch === "boolean" ? { scratch: body.scratch } : {}),
+  };
+
+  if (Object.keys(patch).length === 0) {
+    return new Response("bad payload", { status: 400 });
+  }
 
   try {
     const row = await prisma.specialPromotion.update({
       where: { id: specialId },
-      data: { active: next },
+      data: patch,
     });
     return Response.json(row);
   } catch {

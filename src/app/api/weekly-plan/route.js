@@ -64,6 +64,7 @@ export async function PUT(req) {
     link,
     buttonColor,
     active,
+    scratch,
 
     title,
     button,
@@ -91,7 +92,8 @@ export async function PUT(req) {
     link: mainT.link ?? link ?? "",
 
     icon: icon ?? null,
-    active: Boolean(active ?? true),
+    active: typeof active === "boolean" ? active : true,
+    scratch: !!scratch,
     buttonColor: buttonColor || "green",
 
     translations: Object.keys(translations).length ? translations : null,
