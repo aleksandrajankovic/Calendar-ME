@@ -286,7 +286,7 @@ export default function SpecialEditor({ initial, onCancel, onSaved }) {
               checked={!!form.scratch}
               onChange={(e) => set("scratch", e.target.checked)}
             />
-            Enable scratch card (user must scratch to reveal)
+            Enable scratch card
           </label>
         </div>
         {/* Title + Date */}
