@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect } from "react";
 
 const LANG_META = {
-  me: {
+  sr: {
     flag: "/img/sr.svg",      
     alt: "Crnogorski (Crna Gora)",
     label: "ME",
@@ -20,7 +20,7 @@ export default function LangSwitcher({ year, month, lang, allowedLangs }) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
 
-  const activeMeta = LANG_META[lang] ?? LANG_META.me;
+  const activeMeta = LANG_META[lang] ?? LANG_META.sr;
   const buildHref = (lng) => `/?y=${year}&m=${month}&lang=${lng}`;
 
   // zatvori dropdown na klik van
