@@ -140,13 +140,12 @@ export default function CalendarMobileStack({ adminPreview = false }) {
                 absolute top-0
                 left-0
                 w-[230px] h-[257px]
-              
                 rounded-[18px]
-                
+                 ${locked || isGhost ? "overflow-hidden" : "overflow-visible"}
                 ${
                   isTodayActive
                     ? "border-2 border-[#FACC01] shadow-[0_0_20px_rgba(250,204,1,0.9)]"
-                    : "border border-white/20"
+                    : ""
                 }
                 ${
                   isGhost
