@@ -243,7 +243,7 @@ export default async function Home({ searchParams }) {
       <div className="min-h-[100dvh] flex flex-col overflow-hidden">
         {/* TOP HEADER BAR – crveni, logo levo, lang switcher desno */}
         <header className="w-full bg-[linear-gradient(90deg,#A6080E_0%,#D11101_100%)] px-4 md:px-8 py-2 flex items-center justify-between">
-          <a href="https://meridianbet.pe/" target="_blank" rel="noreferrer">
+          <a href="https://meridianbet.me/" target="_blank" rel="noreferrer">
             <img
               src="./img/logo.svg"
               alt="Meridianbet"

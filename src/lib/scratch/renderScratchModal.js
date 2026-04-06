@@ -36,7 +36,7 @@ export function renderScratchModal({
   const isYellow = buttonColor === "yellow";
   const canOpen = link && link !== "#";
 
-  const hintText = lang === "sr" ? "Ogrebi promociju" : "Scratch the card";
+  const hintText = lang === "sr" ? "SPREMAN ZA IZNENAĐENJE?" : "Ready for a surprise?";
   const hintText1 =
     lang === "sr" ? "Ogrebi i otkrij današnju specijalnu promociju" : "Scratch to reveal today’s offer";
 
