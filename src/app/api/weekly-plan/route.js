@@ -1,25 +1,11 @@
 // src/app/api/weekly-plan/route.js
 export const runtime = "nodejs";
 import prisma from "@/lib/db";
+import { getAdminFromRequest } from "@/lib/auth";
+import { sanitizeRichHtml } from "@/lib/sanitize";
+import { sanitizeLink } from "@/lib/validate";
 
-const DEFAULT_LANG = "pt";
-
-// helper: pročitaj ID admina iz cookie-ja
-function getAdminIdFromCookie(req) {
-  const cookieHeader = req.headers.get("cookie") || "";
-  const match = cookieHeader.match(/admin_auth=(\d+)/);
-  if (!match) return null;
-  return Number(match[1]);
-}
-
-// helper: dozvoli BILO KOG admina
-function requireAnyAdmin(req) {
-  const adminId = getAdminIdFromCookie(req);
-  if (!adminId) {
-    return { ok: false, status: 401 };
-  }
-  return { ok: true, adminId };
-}
+const DEFAULT_LANG = "sr";
 
 // GET /api/weekly-plan?year=YYYY&month=MM
 export async function GET(req) {
@@ -42,8 +28,8 @@ export async function GET(req) {
 
 // PUT /api/weekly-plan  (upsert jedne stavke)
 export async function PUT(req) {
-  const { ok, status } = requireAnyAdmin(req);
-  if (!ok) return new Response("unauthorized", { status });
+  const payload = await getAdminFromRequest(req);
+  if (!payload) return new Response("unauthorized", { status: 401 });
 
   const body = await req.json().catch(() => ({}));
 
@@ -88,8 +74,8 @@ export async function PUT(req) {
     title: mainT.title ?? title ?? "",
     button: mainT.button ?? button ?? "",
     rich: mainT.rich ?? rich ?? null,
-    richHtml: mainT.richHtml ?? richHtml ?? null,
-    link: mainT.link ?? link ?? "",
+    richHtml: sanitizeRichHtml(mainT.richHtml ?? richHtml ?? null),
+    link: sanitizeLink(mainT.link ?? link ?? ""),
 
     icon: icon ?? null,
     active: typeof active === "boolean" ? active : true,
@@ -111,8 +97,8 @@ export async function PUT(req) {
 
 // DELETE /api/weekly-plan
 export async function DELETE(req) {
-  const { ok, status } = requireAnyAdmin(req);
-  if (!ok) return new Response("unauthorized", { status });
+  const payload = await getAdminFromRequest(req);
+  if (!payload) return new Response("unauthorized", { status: 401 });
 
   const body = await req.json().catch(() => ({}));
   const year = Number.parseInt(body.year, 10);

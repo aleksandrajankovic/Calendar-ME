@@ -1,26 +1,12 @@
 // app/api/weekly/[weekday]/route.js
 export const runtime = "nodejs";
 import prisma from "@/lib/db";
+import { getAdminFromRequest } from "@/lib/auth";
+import { sanitizeRichHtml } from "@/lib/sanitize";
+import { sanitizeLink } from "@/lib/validate";
 
 const DEFAULT_LANG = "ba";
 export const revalidate = 3600;
-
-// helper: pročitaj ID admina iz cookie-ja
-function getAdminIdFromCookie(req) {
-  const cookieHeader = req.headers.get("cookie") || "";
-  const match = cookieHeader.match(/admin_auth=(\d+)/);
-  if (!match) return null;
-  return Number(match[1]);
-}
-
-// helper: dozvoli BILO KOG admina
-function requireAnyAdmin(req) {
-  const adminId = getAdminIdFromCookie(req);
-  if (!adminId) {
-    return { ok: false, status: 401 };
-  }
-  return { ok: true, adminId };
-}
 
 function parseWeekdayParam(params) {
   const n = Number.parseInt(params?.weekday, 10);
@@ -29,8 +15,8 @@ function parseWeekdayParam(params) {
 
 // PUT /api/weekly/:weekday  (upsert)
 export async function PUT(req, context) {
-  const { ok, status } = requireAnyAdmin(req);
-  if (!ok) return new Response("unauthorized", { status });
+  const payload = await getAdminFromRequest(req);
+  if (!payload) return new Response("unauthorized", { status: 401 });
 
   const params = await context.params;
   const weekday = parseWeekdayParam(params);
@@ -65,12 +51,12 @@ export async function PUT(req, context) {
     title: mainT.title ?? title ?? "",
     button: mainT.button ?? button ?? "",
     rich: mainT.rich ?? rich ?? null,
-    richHtml: mainT.richHtml ?? richHtml ?? null,
-    link: mainT.link ?? link ?? "",
+    richHtml: sanitizeRichHtml(mainT.richHtml ?? richHtml ?? null),
+    link: sanitizeLink(mainT.link ?? link ?? ""),
 
     icon: icon ?? "",
     active: typeof active === "boolean" ? active : true,
-    scratch: !!scratch, 
+    scratch: !!scratch,
     buttonColor: buttonColor || "green",
 
     translations: Object.keys(translations).length ? translations : null,
@@ -88,8 +74,8 @@ export async function PUT(req, context) {
 
 // PATCH /api/weekly/:weekday  { active?: boolean, scratch?: boolean }
 export async function PATCH(req, context) {
-  const { ok, status } = requireAnyAdmin(req);
-  if (!ok) return new Response("unauthorized", { status });
+  const payload = await getAdminFromRequest(req);
+  if (!payload) return new Response("unauthorized", { status: 401 });
 
   const params = await context.params;
   const weekday = parseWeekdayParam(params);
@@ -119,8 +105,8 @@ export async function PATCH(req, context) {
 
 // DELETE /api/weekly/:weekday
 export async function DELETE(req, context) {
-  const { ok, status } = requireAnyAdmin(req);
-  if (!ok) return new Response("unauthorized", { status });
+  const payload = await getAdminFromRequest(req);
+  if (!payload) return new Response("unauthorized", { status: 401 });
 
   const params = await context.params;
   const weekday = parseWeekdayParam(params);

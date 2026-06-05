@@ -2,16 +2,12 @@ export const runtime = "nodejs";
 
 import fs from "node:fs/promises";
 import path from "node:path";
-
-function isAuthed(req) {
-  const cookie = req.headers.get("cookie") || "";
-  // dovoljno je da postoji admin_auth cookie
-  return cookie.includes("admin_auth=");
-}
+import { getAdminFromRequest } from "@/lib/auth";
 
 // GET /api/images  -> lista fajlova iz public/uploads
 export async function GET(req) {
-  if (!isAuthed(req)) return new Response("unauthorized", { status: 401 });
+  const payload = await getAdminFromRequest(req);
+  if (!payload) return new Response("unauthorized", { status: 401 });
 
   const uploadsDir = path.join(process.cwd(), "public", "uploads");
 
@@ -38,7 +34,8 @@ export async function GET(req) {
 
 // DELETE /api/images  { filename }
 export async function DELETE(req) {
-  if (!isAuthed(req)) return new Response("unauthorized", { status: 401 });
+  const payload = await getAdminFromRequest(req);
+  if (!payload) return new Response("unauthorized", { status: 401 });
 
   const body = await req.json().catch(() => ({}));
   const filename = (body.filename || "").trim();

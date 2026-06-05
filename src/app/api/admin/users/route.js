@@ -3,27 +3,16 @@ export const runtime = "nodejs";
 
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/db";
-
-function getAdminIdFromCookie(req) {
-  const cookieHeader = req.headers.get("cookie") || "";
-  const match = cookieHeader.match(/admin_auth=(\d+)/);
-  if (!match) return null;
-  return Number(match[1]);
-}
+import { getAdminFromRequest } from "@/lib/auth";
 
 // GET /api/admin/users  -> lista svih admina (samo super admin)
 export async function GET(req) {
   try {
-    const currentAdminId = getAdminIdFromCookie(req);
-    if (!currentAdminId) {
+    const payload = await getAdminFromRequest(req);
+    if (!payload) {
       return new Response("Unauthorized", { status: 401 });
     }
-
-    const currentAdmin = await prisma.adminUser.findUnique({
-      where: { id: currentAdminId },
-    });
-
-    if (!currentAdmin || !currentAdmin.isSuper) {
+    if (!payload.isSuper) {
       return new Response("Forbidden", { status: 403 });
     }
 
@@ -46,19 +35,13 @@ export async function GET(req) {
   }
 }
 
-
 export async function POST(req) {
   try {
-    const currentAdminId = getAdminIdFromCookie(req);
-    if (!currentAdminId) {
+    const payload = await getAdminFromRequest(req);
+    if (!payload) {
       return new Response("Unauthorized", { status: 401 });
     }
-
-    const currentAdmin = await prisma.adminUser.findUnique({
-      where: { id: currentAdminId },
-    });
-
-    if (!currentAdmin || !currentAdmin.isSuper) {
+    if (!payload.isSuper) {
       return new Response("Forbidden", { status: 403 });
     }
 

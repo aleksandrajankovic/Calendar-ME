@@ -13,10 +13,15 @@ enum PromoCategory {
   ALL
 }
 model CalendarSettings {
-  id         Int      @id
-  bgImageUrl String?
+  id               Int      @id
+  bgImageUrl       String?
   bgImageUrlMobile String?
-  updatedAt  DateTime @updatedAt
+  theme            String?
+  logoUrl          String?
+  calendarTitle    Json?
+  calendarPosition String?
+  monthBackgrounds Json?
+  updatedAt        DateTime @updatedAt
 }
 model WeeklyPromotion {
   id           Int      @id @default(autoincrement())

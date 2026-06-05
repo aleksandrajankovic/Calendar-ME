@@ -5,24 +5,16 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import crypto from "node:crypto";
 import sharp from "sharp";
+import { getAdminFromRequest } from "@/lib/auth";
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5MB
 const MAX_WIDTH = 1600;
 const QUALITY = 85;
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp"];
 
-// helper: bilo koji ulogovan admin
-function getAdminIdFromCookie(req) {
-  const cookieHeader = req.headers.get("cookie") || "";
-  const match = cookieHeader.match(/admin_auth=(\d+)/);
-  if (!match) return null;
-  return Number(match[1]);
-}
-
 export async function POST(req) {
-  // dozvoli bilo kog admina
-  const adminId = getAdminIdFromCookie(req);
-  if (!adminId) {
+  const payload = await getAdminFromRequest(req);
+  if (!payload) {
     return new Response("unauthorized", { status: 401 });
   }
 

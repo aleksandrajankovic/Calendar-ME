@@ -1,29 +1,18 @@
 export const runtime = "nodejs";
 
-import bcrypt from "bcryptjs";
 import prisma from "@/lib/db";
-
-function getAdminIdFromCookie(req) {
-  const cookieHeader = req.headers.get("cookie") || "";
-  const match = cookieHeader.match(/admin_auth=(\d+)/);
-  if (!match) return null;
-  return Number(match[1]);
-}
+import { getAdminFromRequest } from "@/lib/auth";
 
 // PATCH /api/admin/users/:id  -> edit name/email (samo super admin)
 export async function PATCH(req, { params }) {
-  const { id: idParam } = await params; // ⬅️ bitno
+  const { id: idParam } = await params;
 
   try {
-    const currentAdminId = getAdminIdFromCookie(req);
-    if (!currentAdminId) {
+    const payload = await getAdminFromRequest(req);
+    if (!payload) {
       return new Response("Unauthorized", { status: 401 });
     }
-
-    const currentAdmin = await prisma.adminUser.findUnique({
-      where: { id: currentAdminId },
-    });
-    if (!currentAdmin || !currentAdmin.isSuper) {
+    if (!payload.isSuper) {
       return new Response("Forbidden", { status: 403 });
     }
 
@@ -74,18 +63,14 @@ export async function PATCH(req, { params }) {
 
 // DELETE /api/admin/users/:id  -> brisanje (samo super admin)
 export async function DELETE(req, { params }) {
-  const { id: idParam } = await params; // ⬅️ bitno
+  const { id: idParam } = await params;
 
   try {
-    const currentAdminId = getAdminIdFromCookie(req);
-    if (!currentAdminId) {
+    const payload = await getAdminFromRequest(req);
+    if (!payload) {
       return new Response("Unauthorized", { status: 401 });
     }
-
-    const currentAdmin = await prisma.adminUser.findUnique({
-      where: { id: currentAdminId },
-    });
-    if (!currentAdmin || !currentAdmin.isSuper) {
+    if (!payload.isSuper) {
       return new Response("Forbidden", { status: 403 });
     }
 
@@ -94,7 +79,7 @@ export async function DELETE(req, { params }) {
       return new Response("Bad id", { status: 400 });
     }
 
-    if (id === currentAdminId) {
+    if (id === payload.adminId) {
       return new Response("Cannot delete yourself", { status: 400 });
     }
 

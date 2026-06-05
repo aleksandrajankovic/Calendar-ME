@@ -5,23 +5,10 @@ import toast from "react-hot-toast";
 import RichEditor from "@/components/RichEditor";
 import ImageGalleryModal from "../../components/ImageGalleryModal";
 
-const LABELS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+const LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-// jezici za tabove
-const LANGS = [
-  { code: "sr", label: "Serbian" },
-  { code: "en", label: "English" },
-];
+const LANG = "sr";
 
-// kategorije za promo
 const CATEGORIES = [
   { value: "SPORT", label: "Sport" },
   { value: "CASINO", label: "Casino" },
@@ -32,10 +19,8 @@ const CATEGORIES = [
 export default function WeeklyEditor({ initial, onCancel, onSave }) {
   const seed = useMemo(() => {
     const baseTranslations = initial?.translations || {};
-    const mainLang = LANGS[0].code; // "pt"
-
-    if (!baseTranslations[mainLang]) {
-      baseTranslations[mainLang] = {
+    if (!baseTranslations[LANG]) {
+      baseTranslations[LANG] = {
         title: initial?.title ?? "",
         button: initial?.button ?? "",
         link: initial?.link ?? "",
@@ -55,80 +40,52 @@ export default function WeeklyEditor({ initial, onCancel, onSave }) {
 
   const [form, setForm] = useState(seed);
   const [saving, setSaving] = useState(false);
-  const [activeLang, setActiveLang] = useState(LANGS[0].code);
   const [showIconGallery, setShowIconGallery] = useState(false);
 
-  useEffect(() => {
-    setForm(seed);
-  }, [seed]);
+  useEffect(() => { setForm(seed); }, [seed]);
 
   function setField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function setTranslationField(lang, key, value) {
+  function setTranslationField(key, value) {
     setForm((prev) => {
-      const prevTranslations = prev.translations || {};
-      const prevLangObj = prevTranslations[lang] || {};
-      return {
-        ...prev,
-        translations: {
-          ...prevTranslations,
-          [lang]: {
-            ...prevLangObj,
-            [key]: value,
-          },
-        },
-      };
+      const prevT = prev.translations || {};
+      const prevL = prevT[LANG] || {};
+      return { ...prev, translations: { ...prevT, [LANG]: { ...prevL, [key]: value } } };
     });
   }
 
-  function handlePreviewCalendar() {
-    const y = form.year || new Date().getFullYear();
-    const m =
-      typeof form.month === "number" ? form.month : new Date().getMonth();
-
-    const url = `/?y=${y}&m=${m}`;
-    window.open(url, "_blank", "noopener,noreferrer"); // novi tab
-  }
-
   async function save() {
-    const currentT = form.translations?.[activeLang] || {};
+    const currentT = form.translations?.[LANG] || {};
 
     if (!currentT.title?.trim()) {
-      toast.error("Title is required for active language.");
+      toast.error("Title is required.");
       return;
     }
-
     if (!currentT.richHtml?.trim()) {
-      toast.error("Description is required for active language.");
+      toast.error("Description is required.");
       return;
     }
 
     setSaving(true);
     try {
       const translations = form.translations || {};
-      const mainT = translations[activeLang] || {};
-      const mainLink = mainT.link || form.link || "";
+      const mainT = translations[LANG] || {};
 
       await onSave({
         weekday: form.weekday,
-
         translations,
-        defaultLang: activeLang,
-
+        defaultLang: LANG,
         title: mainT.title || "",
         button: mainT.button || "",
-        link: mainLink,
+        link: mainT.link || "",
         rich: mainT.rich || null,
         richHtml: mainT.richHtml || "",
         scratch: !!form.scratch,
-        subtitle: form.subtitle ?? "",
-        image: form.image ?? "",
         icon: form.icon ?? "",
         active: !!form.active,
         buttonColor: form.buttonColor ?? "green",
-
         category: form.category || "ALL",
       });
 
@@ -141,24 +98,18 @@ export default function WeeklyEditor({ initial, onCancel, onSave }) {
   }
 
   const dayLabel = LABELS[form.weekday] || "";
-  const currentT = form.translations?.[activeLang] || {};
+  const currentT = form.translations?.[LANG] || {};
 
   return (
     <>
-      {/* Top bar: Back + Edit + actions */}
+      {/* Top bar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="text-sm text-[#AC1C09] hover:underline"
-          >
+          <button type="button" onClick={onCancel} className="text-sm text-[#AC1C09] hover:underline">
             ← Back
           </button>
           <div className="text-sm text-neutral-600">Edit:</div>
-          <div className="text-base font-semibold text-neutral-900">
-            {dayLabel}
-          </div>
+          <div className="text-base font-semibold text-neutral-900">{dayLabel}</div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -181,70 +132,26 @@ export default function WeeklyEditor({ initial, onCancel, onSave }) {
       </div>
 
       <div className="mt-6 bg-white border border-neutral-200 rounded-lg shadow-sm p-4 md:p-5 space-y-4">
-        {/* Language tabs + Active + Preview calendar */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            {LANGS.map((lng) => (
-              <button
-                key={lng.code}
-                type="button"
-                onClick={() => setActiveLang(lng.code)}
-                className={`px-3 py-1.5 text-xs border-b-2 ${
-                  activeLang === lng.code
-                    ? "border-[#AC1C09] text-[#AC1C09] font-semibold"
-                    : "border-transparent text-neutral-600 hover:text-neutral-900"
-                }`}
-              >
-                {lng.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between gap-4">
-          {/* Active toggle */}
-          <label className="flex items-center gap-2 text-sm text-neutral-800">
-            <button
-              type="button"
-              onClick={() => setField("active", !form.active)}
-              className={`h-5 w-5 rounded-sm border flex items-center justify-center ${
-                form.active
-                  ? "bg-[#17BB00] border-[#17BB00]"
-                  : "bg-white border-neutral-400"
-              }`}
-            >
-              {form.active && (
-                <span className="text-white text-xs leading-none">
-                  <svg
-                    width="13"
-                    height="10"
-                    viewBox="0 0 13 10"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M11.2667 1L4.20833 8.05833L1 4.85"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-              )}
-            </button>
-            <span className="text-[#989898] text-xs">Active</span>
-          </label>
-
-          {/* Preview calendar button */}
+        {/* Active toggle */}
+        <label className="flex items-center gap-2 text-sm text-neutral-800">
           <button
             type="button"
-            onClick={handlePreviewCalendar}
-            className="px-[18px] py-[7px] rounded bg-[#17BB00] text-white text-xs font-condensed hover:brightness-110"
+            onClick={() => setField("active", !form.active)}
+            className={`h-5 w-5 rounded-sm border flex items-center justify-center ${
+              form.active ? "bg-[#17BB00] border-[#17BB00]" : "bg-white border-neutral-400"
+            }`}
           >
-            Preview calendar
+            {form.active && (
+              <span className="text-white text-xs leading-none">
+                <svg width="13" height="10" viewBox="0 0 13 10" fill="none">
+                  <path d="M11.2667 1L4.20833 8.05833L1 4.85" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+            )}
           </button>
-        </div>
+          <span className="text-[#989898] text-xs">Active</span>
+        </label>
+
         {/* Scratch toggle */}
         <label className="flex items-center gap-2 text-sm text-neutral-800">
           <input
@@ -254,105 +161,68 @@ export default function WeeklyEditor({ initial, onCancel, onSave }) {
           />
           Enable scratch card
         </label>
-        {/* Form fields */}
+
+        {/* Title */}
         <div className="grid md:grid-cols-2 gap-4">
-          {/* Title (po jeziku) */}
           <label className="block text-sm text-neutral-800">
-            <span className="mb-1 inline-block">
-              Title ({activeLang.toUpperCase()})
-            </span>
+            <span className="mb-1 inline-block">Title</span>
             <input
               className="w-full border border-[#D0D0D0] rounded px-2.5 py-1.5 text-sm"
               value={currentT.title || ""}
-              onChange={(e) =>
-                setTranslationField(activeLang, "title", e.target.value)
-              }
+              onChange={(e) => setTranslationField("title", e.target.value)}
             />
           </label>
         </div>
 
+        {/* Button label + link + color */}
         <div className="flex flex-wrap items-end gap-4">
-          {/* Button label (po jeziku) */}
           <label className="block text-sm text-neutral-800 flex-1 min-w-[180px]">
-            <span className="mb-1 inline-block">
-              Button label ({activeLang.toUpperCase()})
-            </span>
+            <span className="mb-1 inline-block">Button label</span>
             <input
               className="w-full border border-[#D0D0D0] rounded px-2.5 py-1.5 text-sm"
               value={currentT.button || ""}
-              onChange={(e) =>
-                setTranslationField(activeLang, "button", e.target.value)
-              }
+              onChange={(e) => setTranslationField("button", e.target.value)}
             />
           </label>
 
-          {/* Button link (po jeziku) */}
           <label className="block text-sm text-neutral-800 flex-1 min-w-[180px]">
-            <span className="mb-1 inline-block">
-              Button link ({activeLang.toUpperCase()})
-            </span>
+            <span className="mb-1 inline-block">Button link</span>
             <input
               className="w-full border border-[#D0D0D0] rounded px-2.5 py-1.5 text-sm"
               value={currentT.link || ""}
-              onChange={(e) =>
-                setTranslationField(activeLang, "link", e.target.value)
-              }
+              onChange={(e) => setTranslationField("link", e.target.value)}
               placeholder="https://..."
             />
           </label>
 
-          {/* Button Color (fiksna širina) */}
           <div className="flex flex-col items-start w-32 shrink-0">
-            <span className="mb-1 inline-block text-sm text-neutral-800">
-              Button Color
-            </span>
+            <span className="mb-1 inline-block text-sm text-neutral-800">Button Color</span>
             <div className="flex items-center gap-3">
-              {/* Žuta */}
               <button
                 type="button"
                 onClick={() => setField("buttonColor", "yellow")}
-                className={`h-7 w-7 rounded-full flex items-center justify-center border transition ${
-                  form.buttonColor === "yellow"
-                    ? "border-black"
-                    : "border-transparent"
-                }`}
+                className={`h-7 w-7 rounded-full flex items-center justify-center border transition ${form.buttonColor === "yellow" ? "border-black" : "border-transparent"}`}
               >
                 <span className="h-6 w-6 rounded-full bg-[#FFCB05] flex items-center justify-center">
-                  {form.buttonColor === "yellow" && (
-                    <span className="text-black text-[10px] leading-none">
-                      ✓
-                    </span>
-                  )}
+                  {form.buttonColor === "yellow" && <span className="text-black text-[10px]">✓</span>}
                 </span>
               </button>
-
-              {/* Zelena */}
               <button
                 type="button"
                 onClick={() => setField("buttonColor", "green")}
-                className={`h-7 w-7 rounded-full flex items-center justify-center border transition ${
-                  form.buttonColor === "green"
-                    ? "border-black"
-                    : "border-transparent"
-                }`}
+                className={`h-7 w-7 rounded-full flex items-center justify-center border transition ${form.buttonColor === "green" ? "border-black" : "border-transparent"}`}
               >
                 <span className="h-6 w-6 rounded-full bg-[#31A62E] flex items-center justify-center">
-                  {form.buttonColor === "green" && (
-                    <span className="text-white text-[10px] leading-none">
-                      ✓
-                    </span>
-                  )}
+                  {form.buttonColor === "green" && <span className="text-white text-[10px]">✓</span>}
                 </span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Category selector */}
+        {/* Category */}
         <div className="mt-2">
-          <span className="mb-1 inline-block text-sm text-neutral-800">
-            Category
-          </span>
+          <span className="mb-1 inline-block text-sm text-neutral-800">Category</span>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((cat) => {
               const selected = form.category === cat.value;
@@ -375,69 +245,51 @@ export default function WeeklyEditor({ initial, onCancel, onSave }) {
           </div>
         </div>
 
-        {/* Icon URL + Choose file u jednom redu */}
+        {/* Icon */}
         <div className="mt-3">
           <label className="block text-sm text-neutral-800">
             <span className="mb-1 inline-block">Icon</span>
-
             <div className="flex flex-wrap items-center gap-3">
-              {/* Ručni unos / URL */}
               <input
                 className="flex-1 min-w-0 border border-[#D0D0D0] rounded px-2.5 py-1.5 text-sm"
                 value={form.icon || ""}
                 onChange={(e) => setField("icon", e.target.value)}
                 placeholder="/uploads/promo-icon.webp"
               />
-
-              {/* Dugme za galeriju */}
               <button
                 type="button"
                 onClick={() => setShowIconGallery(true)}
-                className="shrink-0 font-condensed inline-flex items-center justify-center px-4 py-[10px] rounded bg-[#1F2933] text-white text-xs hover:brightness-110 whitespace-nowrap"
+                className="shrink-0 font-condensed inline-flex items-center justify-center px-4 py-2.5 rounded bg-[#1F2933] text-white text-xs hover:brightness-110 whitespace-nowrap"
               >
                 Choose from gallery
               </button>
             </div>
-
             {form.icon && (
               <div className="mt-2 flex items-center gap-3">
-                <img
-                  src={form.icon}
-                  alt="icon preview"
-                  className="w-8 h-8 object-contain border border-neutral-200 rounded bg-white"
-                />
-                <code className="text-xs text-neutral-500 break-all">
-                  {form.icon}
-                </code>
+                <img src={form.icon} alt="icon preview" className="w-8 h-8 object-contain border border-neutral-200 rounded bg-white" />
+                <code className="text-xs text-neutral-500 break-all">{form.icon}</code>
               </div>
             )}
           </label>
         </div>
 
-        {/* Gallery modal */}
         {showIconGallery && (
           <ImageGalleryModal
-            onSelect={(url) => {
-              setField("icon", url);
-              setShowIconGallery(false);
-            }}
+            onSelect={(url) => { setField("icon", url); setShowIconGallery(false); }}
             onClose={() => setShowIconGallery(false)}
           />
         )}
 
-        {/* Rich text editor */}
+        {/* Rich text */}
         <div className="mt-2">
-          <span className="text-sm text-neutral-800 block mb-1.5">
-            Description ({activeLang.toUpperCase()})
-          </span>
+          <span className="text-sm text-neutral-800 block mb-1.5">Description</span>
           <div className="border border-[#D0D0D0] rounded">
             <RichEditor
-              key={activeLang} // remount kad promeniš jezik
               initialJSON={currentT.rich ?? null}
-              placeholder="Upiši sadržaj za ovu nedeljnu promociju…"
+              placeholder="Enter content for this weekly promotion…"
               onChange={({ json, html }) => {
-                setTranslationField(activeLang, "rich", json);
-                setTranslationField(activeLang, "richHtml", html);
+                setTranslationField("rich", json);
+                setTranslationField("richHtml", html);
               }}
             />
           </div>

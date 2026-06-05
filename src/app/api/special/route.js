@@ -1,20 +1,15 @@
 export const runtime = "nodejs";
 import prisma from "@/lib/db";
+import { getAdminFromRequest } from "@/lib/auth";
+import { sanitizeRichHtml } from "@/lib/sanitize";
+import { sanitizeLink } from "@/lib/validate";
 
-const DEFAULT_LANG = "pt";
-
-// helper: pročitaj ID admina iz cookie-ja
-function getAdminIdFromCookie(req) {
-  const cookieHeader = req.headers.get("cookie") || "";
-  const match = cookieHeader.match(/admin_auth=(\d+)/);
-  if (!match) return null;
-  return Number(match[1]);
-}
+const DEFAULT_LANG = "sr";
 
 // GET /api/specials
 export async function GET(req) {
-  const adminId = getAdminIdFromCookie(req);
-  if (!adminId) {
+  const payload = await getAdminFromRequest(req);
+  if (!payload) {
     return new Response("unauthorized", { status: 401 });
   }
 
@@ -31,8 +26,8 @@ export async function GET(req) {
 
 // POST /api/specials
 export async function POST(req) {
-  const adminId = getAdminIdFromCookie(req);
-  if (!adminId) {
+  const payload = await getAdminFromRequest(req);
+  if (!payload) {
     return new Response("unauthorized", { status: 401 });
   }
 
@@ -47,7 +42,7 @@ export async function POST(req) {
     link,
     buttonColor,
     active,
-    scratch, 
+    scratch,
     title,
     button,
     rich,
@@ -79,13 +74,13 @@ export async function POST(req) {
 
       title: mainT.title ?? title ?? "",
       button: mainT.button ?? button ?? "",
-      link: mainT.link ?? link ?? "",
+      link: sanitizeLink(mainT.link ?? link ?? ""),
       rich: mainT.rich ?? rich ?? null,
-      richHtml: mainT.richHtml ?? richHtml ?? null,
+      richHtml: sanitizeRichHtml(mainT.richHtml ?? richHtml ?? null),
 
       icon: icon ?? "",
       active: typeof active === "boolean" ? active : true,
-      scratch: !!scratch, // ✅ dodato
+      scratch: !!scratch,
       buttonColor: buttonColor || "green",
 
       translations: Object.keys(translations).length ? translations : null,
