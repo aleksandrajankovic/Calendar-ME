@@ -302,14 +302,6 @@ export default function CalendarMobileFootball({
           </button>
         </div>
 
-        {selectedDay && (
-          <div className="flex flex-col items-center gap-1">
-            <span className={`${russoOne.className} text-[22px] leading-none italic font-bold ${isToday ? "text-[#FFD700]" : "text-white"}`}>
-              {selectedDay.day.toString().padStart(2, "0")}
-            </span>
-          </div>
-        )}
-
         {year != null && month != null && (
           <MonthPagination
             year={year}
