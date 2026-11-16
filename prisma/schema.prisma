@@ -11,49 +11,47 @@ enum PromoCategory {
   CASINO
   MISSIONS
   ALL
+  GOLD
+  QUARTER_FINAL
+  SEMI_FINAL
+  FINAL
 }
 model CalendarSettings {
-  id               Int      @id
-  bgImageUrl       String?
-  bgImageUrlMobile String?
-  theme            String?
-  logoUrl          String?
-  calendarTitle    Json?
-  calendarPosition String?
-  monthBackgrounds Json?
-  updatedAt        DateTime @updatedAt
+  id                 Int      @id
+  bgImageUrl         String?
+  bgImageUrlMobile   String?
+  monthBackgrounds   Json?
+  calendarPosition   String?
+  calendarTitle      Json?
+  logoUrl            String?
+  showLogo           Boolean  @default(false)
+  confetti           Json? // konfete posle grebanja: { style, emoji? } — vidi lib/calendar/confetti.js
+  closed             Json? // kalendar zatvoren za posetioce: { enabled, message } — posetilac vidi samo poruku
+  theme              String?
+  seoMeta            Json?
+  countdownTargetIso String?
+  countdownLabel     String?
+  leaderboard        Json?
+  updatedAt          DateTime @updatedAt
 }
-model WeeklyPromotion {
-  id           Int      @id @default(autoincrement())
-  weekday      Int
-  title        String
-  link         String
-  button       String
-  active       Boolean  @default(true)
-  icon         String?
-  buttonColor  String   @default("green")
-  rich         Json?
-  richHtml     String?
-scratch Boolean @default(false)
-  translations Json?
-category     PromoCategory @default(ALL)
-  @@unique([weekday])
-}
-
 model SpecialPromotion {
-  id           Int      @id @default(autoincrement())
-  year         Int
-  month        Int
-  day          Int
-  title        String
-  link         String
-  button       String
-  active       Boolean  @default(true)
-  icon         String?
-  buttonColor  String   @default("green")
-  rich         Json?
-  richHtml     String?
-scratch Boolean @default(false)
+  id            Int      @id @default(autoincrement())
+  year          Int
+  month         Int
+  day           Int
+  title         String
+  link          String
+  button        String
+  active        Boolean  @default(true)
+  icon          String?
+  buttonColor   String   @default("green")
+  rich          Json?
+  richHtml      String?
+  scratch       Boolean  @default(false)
+  slot          Boolean  @default(false) // otkrivanje slot mašinom (isključuje scratch)
+  flipCard      Boolean  @default(false) // kartica sa slikom koja se okreće na detalje (sama ili posle grebanja)
+  knockoutPhase String?
+
   translations Json?
   category     PromoCategory @default(ALL)
 }
@@ -71,9 +69,12 @@ model WeeklyPlan {
   rich        Json?
   richHtml    String?
   buttonColor String   @default("green")
-scratch Boolean @default(false)
+  scratch     Boolean  @default(false)
+  slot        Boolean  @default(false) // otkrivanje slot mašinom (isključuje scratch)
+  flipCard    Boolean  @default(false) // kartica sa slikom koja se okreće na detalje (sama ili posle grebanja)
+
   translations Json?
-category     PromoCategory @default(ALL)
+  category     PromoCategory @default(ALL)
   @@unique([year, month, weekday])
 }
 
@@ -85,4 +86,24 @@ model AdminUser {
   isSuper      Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// Analitika kalendara — jedan red po događaju (prikaz, otvaranje dana, grebanje, klik na dugme).
+// Bez kolačića i ličnih podataka: "visitor" je dnevni anonimni heš (IP + pregledač + datum),
+// koji se ne može povezati sa osobom niti pratiti iz dana u dan.
+model CalendarEvent {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  type      String // view | day_open | scratch | cta
+  year      Int?
+  month     Int? // 0–11, kao u kalendaru
+  day       Int?
+  promoType String? // special | weekly
+  title     String?
+  device    String? // mobile | desktop
+  embedded  Boolean  @default(false) // učitan u iframe-u (na betting sajtu)
+  visitor   String?
+
+  @@index([createdAt])
+  @@index([year, month, day])
 }

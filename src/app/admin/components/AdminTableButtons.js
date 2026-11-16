@@ -6,27 +6,32 @@ export function StatusToggleButton({
   className = "",
   activeLabel = "Deactivate",
   inactiveLabel = "Activate",
+  disabled = false,
+  loading = false,
 }) {
+  const label = active ? activeLabel : inactiveLabel;
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled || loading}
+      aria-label={label}
       className={
-        `w-full h-8 text-xs rounded border uppercase cursor-pointer
+        `w-full h-8 text-xs rounded border uppercase cursor-pointer disabled:cursor-not-allowed disabled:opacity-50
         ${
           active
-            ? "border-[#4A4A4A] text-[#4A4A4A] bg-white hover:bg-neutral-50"
-            : "border-green-600 text-green-700 bg-white hover:bg-green-50"
+            ? "border-neutral-600 text-neutral-700 bg-white hover:bg-neutral-50"
+            : "border-admin-primary text-admin-primary bg-white hover:bg-green-50"
         } ` + className
       }
     >
-      {active ? activeLabel : inactiveLabel}
+      {loading ? "..." : label}
     </button>
   );
 }
 
 export function IconButton({
-  variant, // "edit" | "add" | "delete"
+  variant,
   onClick,
   title,
   disabled = false,
@@ -45,7 +50,6 @@ export function IconButton({
       }
     >
       {variant === "edit" && (
-        // pencil
         <svg width="11" height="12" viewBox="0 0 11 12" aria-hidden="true">
           <path
             d="M10.1455 11.2559H0V10.1289H10.1455V11.2559ZM6.84375 0C6.99318 2.04314e-05 7.13651 0.0593917 7.24219 0.165039L8.83691 1.75879C8.88931 1.81113 8.93062 1.87397 8.95898 1.94238C8.98724 2.01069 9.00195 2.08428 9.00195 2.1582C9.00189 2.23211 8.98729 2.30574 8.95898 2.37402C8.93063 2.44227 8.8892 2.50441 8.83691 2.55664L2.3916 9.00195H0V6.61035L6.44531 0.165039C6.55101 0.0594016 6.69431 0 6.84375 0Z"
@@ -55,7 +59,6 @@ export function IconButton({
       )}
 
       {variant === "add" && (
-        // plus
         <svg
           viewBox="0 0 24 24"
           width="16"
@@ -71,8 +74,14 @@ export function IconButton({
         </svg>
       )}
 
+      {variant === "duplicate" && (
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="white" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
+          <rect x="8" y="8" width="12" height="12" rx="2" />
+          <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+        </svg>
+      )}
+
       {variant === "delete" && (
-        // trash
         <svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true">
           <path
             d="M7.85742 3.11133C8.64301 3.11149 9.28613 3.81154 9.28613 4.66699V12.4443C9.28613 13.2998 8.64301 13.9998 7.85742 14H2.14258C1.35699 13.9998 0.713867 13.2998 0.713867 12.4443V4.66699C0.713867 3.81154 1.35699 3.11149 2.14258 3.11133H7.85742ZM6.49316 0C6.67878 9.41196e-05 6.86466 0.085663 6.99316 0.225586L7.5 0.777344H9.28613C9.6788 0.777592 10 1.12804 10 1.55566C9.99995 1.98324 9.67877 2.33276 9.28613 2.33301H0.713867C0.321234 2.33276 5.4316e-05 1.98324 0 1.55566C0 1.12804 0.3212 0.777592 0.713867 0.777344H2.5L3.00684 0.225586C3.13534 0.085663 3.32122 9.41927e-05 3.50684 0H6.49316Z"

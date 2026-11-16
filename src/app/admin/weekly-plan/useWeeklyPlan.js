@@ -33,8 +33,11 @@ export function useWeeklyPlan(year, month) {
         link: payload.link ?? "",
         rich: payload.rich ?? null,
         richHtml: payload.richHtml ?? "",
-        scratch: !!payload.scratch,
+
         active: !!payload.active,
+        scratch: !!payload.scratch,
+        slot: !!payload.slot,
+        flipCard: !!payload.flipCard,
         icon: payload.icon ?? "",
         buttonColor: payload.buttonColor ?? "green",
 
@@ -44,17 +47,31 @@ export function useWeeklyPlan(year, month) {
       }),
     });
 
-    if (!res.ok) {
-      toast.error("Greška pri snimanju");
-      return;
-    }
+    // Greška ide pozivaocu (forma / dugme u listi), koji prikazuje poruku
+    if (!res.ok) throw new Error((await res.text().catch(() => "")) || `HTTP ${res.status}`);
 
     const saved = await res.json();
     setRows((prev) => {
       const other = prev.filter((r) => r.weekday !== saved.weekday);
       return [...other, saved].sort((a, b) => a.weekday - b.weekday);
     });
-    toast.success("Success!");
+    return saved;
+  }
+
+  async function bulkToggle(active) {
+    const prev = rows;
+    setRows((current) => current.map((r) => ({ ...r, active })));
+    const res = await fetch("/api/weekly-plan", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ year, month, active }),
+    });
+    if (!res.ok) {
+      setRows(prev);
+      toast.error("Error!");
+    } else {
+      toast.success(active ? "All activated." : "All deactivated.");
+    }
   }
 
   async function remove(weekday) {
@@ -71,5 +88,18 @@ export function useWeeklyPlan(year, month) {
     }
   }
 
-  return { rows, loading, error, upsert, remove };
+  // Prepiše prethodni mesec u ovaj (samo prazne dane), kao neaktivne nacrte
+  async function copyFromPrevious() {
+    const res = await fetch("/api/weekly-plan/copy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ year, month }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const { created } = await res.json();
+    setRows((prev) => [...prev, ...created].sort((a, b) => a.weekday - b.weekday));
+    return created.length;
+  }
+
+  return { rows, loading, error, upsert, remove, bulkToggle, copyFromPrevious };
 }

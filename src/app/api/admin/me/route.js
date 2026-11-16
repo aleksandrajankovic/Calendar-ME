@@ -6,19 +6,14 @@ import { getAdminFromRequest } from "@/lib/auth";
 
 export async function GET(req) {
   try {
-    const payload = await getAdminFromRequest(req);
-    if (!payload) {
+    const session = await getAdminFromRequest(req);
+    if (!session) {
       return new Response("Unauthorized", { status: 401 });
     }
 
     const admin = await prisma.adminUser.findUnique({
-      where: { id: payload.adminId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        isSuper: true,
-      },
+      where: { id: session.adminId },
+      select: { id: true, name: true, email: true, isSuper: true },
     });
 
     if (!admin) {

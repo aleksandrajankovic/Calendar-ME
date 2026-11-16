@@ -1,29 +1,18 @@
 // src/app/promo/[iso]/[slug]/page.js
-export const runtime = "nodejs";
-
-import prisma from "@/lib/db";
-import { headers } from "next/headers";
-import { notFound, permanentRedirect, redirect } from "next/navigation";
-import { slugify } from "@/lib/slug";
-
-// ---------- helpers ----------
-async function absoluteUrl(path) {
-  const h = await headers();
-
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  const host = h.get("host") ?? "localhost:3000";
-
-  const base = process.env.NEXT_PUBLIC_BASE_URL || `${proto}://${host}`;
-  return `${base}${path}`;
-}
+import { cache } from "react";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { verifyToken } from "@/lib/auth";
+import CalendarPageView from "@/components/calendar/CalendarPageView";
+import { buildPromoUrlISO } from "@/lib/calendar/slug";
+import { buildCalendarData } from "@/lib/calendar/calendarGridHelpers";
+import { BASE_URL, loadCalendarPageData, monthHref } from "@/lib/calendar/calendarPage";
 
 // YYYY-MM-DD → { y, m(0-11), d } + validacija
 function parseISO(iso) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  if (!m) return null;
-  const y = +m[1],
-    mon = +m[2],
-    d = +m[3];
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!match) return null;
+  const y = +match[1], mon = +match[2], d = +match[3];
   const dt = new Date(Date.UTC(y, mon - 1, d));
   const valid =
     dt.getUTCFullYear() === y &&
@@ -32,139 +21,101 @@ function parseISO(iso) {
   return valid ? { y, m: mon - 1, d } : null;
 }
 
-// Nađi promo za datum (special prioritet, pa weekly)
-async function findPromoByDate(y, m, d) {
-  const special = await prisma.specialPromotion.findFirst({
-    where: { year: y, month: m, day: d, active: true },
-  });
-  if (special) return { type: "special", promo: special };
-
-  // weekly po day-of-week (pon=0..ned=6)
-  const jsWd = new Date(y, m, d).getDay(); // 0..6 (ned..sub)
-  const wd = jsWd === 0 ? 6 : jsWd - 1; // 0..6 (pon..ned)
-  const weekly = await prisma.weeklyPromotion.findFirst({
-    where: { weekday: wd, active: true },
-  });
-  if (weekly) return { type: "weekly", promo: weekly };
-
-  return { type: null, promo: null };
+function stripHtml(html = "") {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-// ---------- SEO ----------
-export async function generateMetadata({ params }) {
-  const p = await params;
-  const parsed = parseISO(p.iso);
-  if (!parsed) return {};
+// generateMetadata i sama stranica traže isti dan — cache() dedupuje DB upite u okviru jednog requesta
+const resolveDayEntry = cache(async (iso, isAdmin) => {
+  const parsed = parseISO(iso);
+  if (!parsed) return null;
 
   const { y, m, d } = parsed;
-  const { promo } = await findPromoByDate(y, m, d);
-  if (!promo) return {};
+  const data = await loadCalendarPageData({ year: y, month: m, isAdmin, lang: "sr" });
+  const { daysPayload } = buildCalendarData({
+    year: y,
+    month: m,
+    weekly: data.weekly,
+    specials: data.specials,
+    adminPreview: isAdmin,
+    lang: "sr",
+    today: new Date(),
+  });
 
-  const title = promo.title || "Promoção";
+  const entry = daysPayload.find((e) => e.day === d);
+  if (!entry || !entry.hasPromo) return null;
+
+  // Ne otkrivaj zaključane (buduće) dane — poštuje "daily reveal" mehaniku kalendara
+  if (entry.isLocked && !isAdmin) return null;
+
+  return { y, m, d, entry, data };
+});
+
+export async function generateMetadata({ params }) {
+  const p = await params;
+  const resolved = await resolveDayEntry(p.iso, false);
+  if (!resolved) return {};
+
+  const { y, m, d, entry } = resolved;
+  const date = new Date(y, m, d);
+  const canonical = `${BASE_URL}${buildPromoUrlISO(date, entry.title)}`;
   const description =
-    (Array.isArray(promo.description) && promo.description[0]) ||
-    promo.subtitle ||
-    "Confira a promoção do dia";
-
-  const correctSlug = slugify(promo.title || "promocao");
-  const canonicalPath = `/promo/${p.iso}/${correctSlug}`;
-
-  const url = await absoluteUrl(canonicalPath);
-  const image = promo.image ? await absoluteUrl(promo.image) : undefined;
+    stripHtml(entry.richHtml || "").slice(0, 160) ||
+    `Otkrijte dnevnu promociju "${entry.title}" u Meridianbet Kalendaru Promocija.`;
+  const title = `${entry.title} | Meridianbet Kalendar Promocija`;
 
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates: { canonical },
     openGraph: {
+      url: canonical,
       title,
       description,
-      url,
-      type: "article",
-      images: image ? [{ url: image }] : [],
+      images: [
+        {
+          url: "https://cloud.merbet.com/Preview-image/calendar-universal.png",
+          width: 1200,
+          height: 630,
+          alt: entry.title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: image ? [image] : [],
+      images: ["https://cloud.merbet.com/Preview-image/calendar-universal.png"],
     },
   };
 }
 
-// ---------- PAGE (SSR) ----------
 export default async function PromoDetailPage({ params }) {
-  // 🔴 PRIVREMENO ISKLJUČENO:
-  // svaki pristup /promo/[iso]/[slug] šaljemo nazad na kalendar
-  redirect("/");
+  const p = await params;
 
-  // Ako kasnije hoćeš da vratiš single page, samo obriši `redirect("/")`
-  // i odkomentariši kod ispod:
+  const cookieStore = await cookies();
+  const adminCookie = cookieStore.get("admin_auth");
+  // Samo postojanje cookie-ja nije dovoljno — mora biti validan (potpisan) JWT
+  const isAdmin = !!adminCookie?.value && !!(await verifyToken(adminCookie.value));
 
-  /*
-  const p = await params; // Next 16
-  const parsed = parseISO(p.iso);
-  if (!parsed) notFound();
-
-  const { y, m, d } = parsed;
-  const found = await findPromoByDate(y, m, d);
-  if (!found.promo) notFound();
-
-  const promo = found.promo;
-
-  const correctSlug = slugify(promo.title || "promocao");
-  if (p.slug !== correctSlug) {
-    permanentRedirect(`/promo/${p.iso}/${correctSlug}`);
+  const resolved = await resolveDayEntry(p.iso, isAdmin);
+  if (!resolved) {
+    // Nevalidan datum, dan bez promocije, ili još zaključan dan — nema šta jedinstveno da se prikaže
+    const parsed = parseISO(p.iso);
+    redirect(parsed ? monthHref(parsed.y, parsed.m) : "/");
   }
 
-  const dateHuman = `${String(d).padStart(2, "0")}.${String(m + 1).padStart(
-    2,
-    "0"
-  )}.${y}.`;
+  const { y, m, entry, data } = resolved;
 
   return (
-    <main className="max-w-3xl mx-auto p-6 space-y-4">
-      <p className="text-sm text-zinc-500">{dateHuman}</p>
-      <h1 className="text-2xl font-bold text-white">{promo.title}</h1>
-
-      {promo.richHtml ? (
-        <article
-          className="prose prose-invert max-w-none [&_ul]:list-inside [&_ul]:pl-0 [&_ul_li_p]:m-0 [&_ul_li_p]:inline"
-          dangerouslySetInnerHTML={{ __html: promo.richHtml }}
-        />
-      ) : (
-        <>
-          {promo.image ? (
-            <div
-              className="w-full aspect-[44/17] rounded-lg overflow-hidden mb-4"
-              style={{
-                backgroundImage: `url(${promo.image})`,
-                backgroundSize: "contain",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
-              }}
-            />
-          ) : null}
-        </>
-      )}
-
-      {promo.link ? (
-        <a
-          className="inline-block bg-red-600 hover:bg-red-500 px-4 py-2 rounded-md"
-          href={promo.link}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {promo.button || "Saiba mais"}
-        </a>
-      ) : null}
-
-      <div>
-        <a href="/" className="text-white underline">
-          ← Voltar ao calendário
-        </a>
-      </div>
-    </main>
+    <CalendarPageView
+      year={y}
+      month={m}
+      isAdmin={isAdmin}
+      lang="sr"
+      today={new Date()}
+      openDay={entry.day}
+      {...data}
+    />
   );
-  */
 }

@@ -1,54 +1,46 @@
+// src/app/api/images/route.js
 export const runtime = "nodejs";
 
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getAdminFromRequest } from "@/lib/auth";
 
-// GET /api/images  -> lista fajlova iz public/uploads
 export async function GET(req) {
-  const payload = await getAdminFromRequest(req);
-  if (!payload) return new Response("unauthorized", { status: 401 });
+  const session = await getAdminFromRequest(req);
+  if (!session) return new Response("unauthorized", { status: 401 });
 
   const uploadsDir = path.join(process.cwd(), "public", "uploads");
 
   try {
     const entries = await fs.readdir(uploadsDir, { withFileTypes: true });
-
     const files = entries
       .filter((e) => e.isFile())
-      .map((e) => ({
-        name: e.name,
-        url: `/uploads/${e.name}`,
-      }));
+      .map((e) => ({ name: e.name, url: `/uploads/${e.name}` }));
 
     return Response.json({ files });
   } catch (err) {
-    // ako folder ne postoji, samo empty lista
-    if (err.code === "ENOENT") {
-      return Response.json({ files: [] });
-    }
+    if (err.code === "ENOENT") return Response.json({ files: [] });
     console.error("List images error:", err);
     return new Response("Error listing images", { status: 500 });
   }
 }
 
-// DELETE /api/images  { filename }
 export async function DELETE(req) {
-  const payload = await getAdminFromRequest(req);
-  if (!payload) return new Response("unauthorized", { status: 401 });
+  const session = await getAdminFromRequest(req);
+  if (!session) return new Response("unauthorized", { status: 401 });
 
   const body = await req.json().catch(() => ({}));
-  const filename = (body.filename || "").trim();
+  const rawFilename = (body.filename || "").trim();
+  const filename = path.basename(rawFilename); // strips any directory components
 
-  if (!filename || filename.includes("..") || filename.includes("/")) {
+  if (!filename || filename !== rawFilename) {
     return new Response("Bad filename", { status: 400 });
   }
 
   const uploadsDir = path.join(process.cwd(), "public", "uploads");
-  const filePath = path.join(uploadsDir, filename);
 
   try {
-    await fs.unlink(filePath);
+    await fs.unlink(path.join(uploadsDir, filename));
   } catch (err) {
     if (err.code !== "ENOENT") {
       console.error("Delete image error:", err);

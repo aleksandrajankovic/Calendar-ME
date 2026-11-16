@@ -1,71 +1,62 @@
+// src/app/api/special/[id]/route.js
 export const runtime = "nodejs";
+
+import { revalidateTag } from "next/cache";
 import prisma from "@/lib/db";
 import { getAdminFromRequest } from "@/lib/auth";
-import { sanitizeRichHtml } from "@/lib/sanitize";
+import { sanitizeRichHtml, sanitizeTranslations } from "@/lib/sanitize";
 import { sanitizeLink } from "@/lib/validate";
 
-const DEFAULT_LANG = "sr";
+const DEFAULT_LANG = "pt";
 
-/* ---------- PUT /api/special/:id ---------- */
 export async function PUT(req, { params }) {
-  const payload = await getAdminFromRequest(req);
-  if (!payload) return new Response("unauthorized", { status: 401 });
+  const session = await getAdminFromRequest(req);
+  if (!session) return new Response("unauthorized", { status: 401 });
 
   const { id } = await params;
   const specialId = Number.parseInt(id, 10);
-  if (!Number.isInteger(specialId)) {
-    return new Response("bad id", { status: 400 });
-  }
+  if (!Number.isInteger(specialId)) return new Response("bad id", { status: 400 });
 
   const body = await req.json().catch(() => ({}));
-
   const {
-    year,
-    month,
-    day,
-    icon,
-    link,
-    buttonColor,
-    active,
-    scratch,
-    title,
-    button,
-    rich,
-    richHtml,
-    translations: rawTranslations,
-    defaultLang,
-    category,
+    year, month, day, icon, link, buttonColor, active, scratch, slot, flipCard,
+    title, button, rich, richHtml,
+    translations: rawTranslations, defaultLang, category, knockoutPhase,
   } = body;
 
   const translations = rawTranslations || {};
   const mainLang = defaultLang || DEFAULT_LANG;
   const mainT = translations[mainLang] || {};
 
-  const rawTitle = (title ?? "").trim();
-  const mainTitle = (mainT.title ?? "").trim();
-
-  if (!rawTitle && !mainTitle) {
+  const MIN_YEAR = 2024, MAX_YEAR = new Date().getFullYear() + 5;
+  if (
+    !Number.isInteger(year) || year < MIN_YEAR || year > MAX_YEAR ||
+    !Number.isInteger(month) || month < 0 || month > 11 ||
+    !Number.isInteger(day) || day < 1 || day > 31
+  ) {
+    return new Response("Invalid date", { status: 400 });
+  }
+  if (!((title ?? "").trim() || (mainT.title ?? "").trim())) {
     return new Response("Title is required", { status: 400 });
   }
 
   const data = {
-    year,
-    month,
-    day,
-
+    year, month, day,
     title: mainT.title ?? title ?? "",
     button: mainT.button ?? button ?? "",
     link: sanitizeLink(mainT.link ?? link ?? ""),
     rich: mainT.rich ?? rich ?? null,
     richHtml: sanitizeRichHtml(mainT.richHtml ?? richHtml ?? null),
-
     icon: icon ?? "",
     active: !!active,
-    scratch: !!scratch,
+    // slot i grebalica se isključuju — slot ima prednost
+    scratch: !!scratch && !slot,
+    slot: !!slot,
+    flipCard: !!flipCard && !slot,
     buttonColor: buttonColor || "green",
-
-    translations: Object.keys(translations).length ? translations : null,
+    translations: sanitizeTranslations(translations),
     category: category || "ALL",
+    knockoutPhase: knockoutPhase || null,
   };
 
   const row = await prisma.specialPromotion.upsert({
@@ -74,26 +65,24 @@ export async function PUT(req, { params }) {
     create: { id: specialId, ...data },
   });
 
+  revalidateTag("calendar");
   return Response.json(row);
 }
 
-/* ---------- PATCH /api/special/:id ---------- */
-// toggle active / scratch
 export async function PATCH(req, { params }) {
-  const payload = await getAdminFromRequest(req);
-  if (!payload) return new Response("unauthorized", { status: 401 });
+  const session = await getAdminFromRequest(req);
+  if (!session) return new Response("unauthorized", { status: 401 });
 
   const { id } = await params;
   const specialId = Number.parseInt(id, 10);
-  if (!Number.isInteger(specialId)) {
-    return new Response("bad id", { status: 400 });
-  }
+  if (!Number.isInteger(specialId)) return new Response("bad id", { status: 400 });
 
   const body = await req.json().catch(() => ({}));
 
   const patch = {
     ...(typeof body.active === "boolean" ? { active: body.active } : {}),
-    ...(typeof body.scratch === "boolean" ? { scratch: body.scratch } : {}),
+    ...(typeof body.scratch === "boolean" ? { scratch: body.scratch, ...(body.scratch ? { slot: false } : {}) } : {}),
+    ...(typeof body.slot === "boolean" ? { slot: body.slot, ...(body.slot ? { scratch: false } : {}) } : {}),
   };
 
   if (Object.keys(patch).length === 0) {
@@ -105,26 +94,22 @@ export async function PATCH(req, { params }) {
       where: { id: specialId },
       data: patch,
     });
+    revalidateTag("calendar");
     return Response.json(row);
   } catch {
     return new Response("not found", { status: 404 });
   }
 }
 
-/* ---------- DELETE /api/special/:id ---------- */
 export async function DELETE(req, { params }) {
-  const payload = await getAdminFromRequest(req);
-  if (!payload) return new Response("unauthorized", { status: 401 });
+  const session = await getAdminFromRequest(req);
+  if (!session) return new Response("unauthorized", { status: 401 });
 
   const { id } = await params;
   const specialId = Number.parseInt(id, 10);
-  if (!Number.isInteger(specialId)) {
-    return new Response("bad id", { status: 400 });
-  }
+  if (!Number.isInteger(specialId)) return new Response("bad id", { status: 400 });
 
-  await prisma.specialPromotion
-    .delete({ where: { id: specialId } })
-    .catch(() => {});
-
+  await prisma.specialPromotion.delete({ where: { id: specialId } }).catch(() => {});
+  revalidateTag("calendar");
   return new Response(null, { status: 204 });
 }

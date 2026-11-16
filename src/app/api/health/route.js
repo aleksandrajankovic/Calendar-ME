@@ -1,9 +1,13 @@
+// src/app/api/health/route.js — provera da li aplikacija i baza rade (za monitoring)
 import prisma from "@/lib/db";
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-    const weeklyCount = await prisma.weeklyPromotion.count();
-    const specialsCount = await prisma.specialPromotion.count();
-    return Response.json({ok:true, weeklyCount, specialsCount})
-    
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return Response.json({ ok: true });
+  } catch {
+    return Response.json({ ok: false }, { status: 503 });
+  }
 }

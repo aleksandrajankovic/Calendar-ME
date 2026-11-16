@@ -41,6 +41,9 @@ yarn-error.log*
 next-env.d.ts
 
 # uploads – slike sa servera
-/public/uploads/
+public/uploads/
 
 /src/generated/prisma
+
+# lokalne SQLite baze (stara dev baza je sadržala admin naloge)
+*.db

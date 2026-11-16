@@ -120,7 +120,7 @@ export default function ImageGalleryModal({ onSelect, onClose }) {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/svg+xml"
             className="hidden"
             onChange={handleUpload}
           />
@@ -135,11 +135,11 @@ export default function ImageGalleryModal({ onSelect, onClose }) {
               No images yet. Use “Upload new”.
             </p>
           ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {images.map((img) => (
                 <div
                   key={img.name}
-                  className="group relative border border-neutral-200 rounded-md overflow-hidden bg-neutral-50"
+                  className="group relative border border-neutral-200 rounded-xl overflow-hidden bg-neutral-50"
                 >
                   <button
                     type="button"
@@ -149,7 +149,7 @@ export default function ImageGalleryModal({ onSelect, onClose }) {
                     <img
                       src={img.url}
                       alt={img.name}
-                      className="w-full h-20 object-contain bg-white"
+                      className="w-full h-36 sm:h-44 object-cover bg-white"
                     />
                   </button>
 

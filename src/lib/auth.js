@@ -39,6 +39,7 @@ export async function signToken(payload) {
 export async function verifyToken(token) {
   try {
     const { payload } = await jwtVerify(token, getSecret());
+    // Odbij revoked tokene
     if (payload.jti && revokedTokens.has(payload.jti)) return null;
     return payload;
   } catch {
@@ -46,6 +47,7 @@ export async function verifyToken(token) {
   }
 }
 
+// Koristi se u API rutama (Node.js runtime)
 export async function getAdminFromRequest(req) {
   const cookieHeader = req.headers.get("cookie") || "";
   const match = cookieHeader.match(/admin_auth=([^;]+)/);
@@ -53,6 +55,7 @@ export async function getAdminFromRequest(req) {
   return verifyToken(match[1]);
 }
 
+// Izvuci payload bez verifikacije (za logout — trebamo jti i exp)
 export function decodeTokenUnsafe(token) {
   try {
     const [, payloadB64] = token.split(".");
