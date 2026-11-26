@@ -25,6 +25,8 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 COPY --from=builder /app/package.json ./
+# next start čita next.config.mjs i u runtime-u (dozvoljene širine slika za /_next/image) — bez njega logo na iPhone-u vraća 400
+COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
