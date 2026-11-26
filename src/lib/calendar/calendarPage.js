@@ -94,6 +94,33 @@ export const getPromoData = unstable_cache(
   { revalidate: 300, tags: ["calendar"] }
 );
 
+// Podešavanja kalendara za posetioce — keširana; admin API (api/calendar-settings) pri
+// svakom čuvanju poziva revalidateTag("calendar"), pa izmene (npr. deaktiviran mesec,
+// zatvoren kalendar) važe odmah. Admin uvek čita sveže iz baze.
+const getCachedSettings = unstable_cache(
+  () => prisma.calendarSettings.findFirst(),
+  ["calendar-settings"],
+  { revalidate: 300, tags: ["calendar"] }
+);
+
+export function getCalendarSettings(isAdmin = false) {
+  return isAdmin ? prisma.calendarSettings.findFirst() : getCachedSettings();
+}
+
+// Strelice za prethodni/sledeći mesec — keširane kao i promocije (isti tag "calendar":
+// čuvanje promocija ili podešavanja ih odmah osvežava)
+const getCachedNearestMonth = unstable_cache(
+  (y, m, direction, inactiveKeys) => findNearestMonthWithPromos(y, m, direction, new Set(inactiveKeys)),
+  ["nearest-month"],
+  { revalidate: 300, tags: ["calendar"] }
+);
+
+function nearestMonth(y, m, direction, inactiveSet, isAdmin) {
+  return isAdmin
+    ? findNearestMonthWithPromos(y, m, direction, inactiveSet)
+    : getCachedNearestMonth(y, m, direction, [...inactiveSet].sort());
+}
+
 // Vraća {y, m} najbližeg meseca sa promocijama u datom smeru, preskačući neaktivne mesece
 export async function findNearestMonthWithPromos(currentY, currentM, direction, inactiveSet = new Set()) {
   const isNext = direction === "next";
@@ -137,7 +164,7 @@ export async function buildCalendarMetadata(year, month) {
   const canonical = `${BASE_URL}${monthHref(year, month)}`;
 
   // seoMeta from DB overrides the auto-generated per-month title/description
-  const settings = await prisma.calendarSettings.findFirst();
+  const settings = await getCalendarSettings();
   const seo = settings?.seoMeta?.sr || {};
 
   const monthSr = MONTH_NAMES_SR[month];
@@ -179,8 +206,8 @@ export async function buildCalendarMetadata(year, month) {
 // PODACI ZA STRANICU
 // -------------------------
 export async function loadCalendarPageData({ year, month, isAdmin, lang = "sr" }) {
-  // CalendarSettings se uvek čita sveže (inactive flag mora biti trenutan)
-  const calendarSettings = await prisma.calendarSettings.findFirst();
+  // CalendarSettings: admin sveže, posetioci iz keša (briše se odmah pri čuvanju u adminu)
+  const calendarSettings = await getCalendarSettings(isAdmin);
   const monthBgs = calendarSettings?.monthBackgrounds || {};
 
   // Redirect korisnika sa deaktiviranog meseca
@@ -191,8 +218,8 @@ export async function loadCalendarPageData({ year, month, isAdmin, lang = "sr" }
         .map(([k]) => k)
     );
     const nearest =
-      (await findNearestMonthWithPromos(year, month, "next", inactiveSet)) ||
-      (await findNearestMonthWithPromos(year, month, "prev", inactiveSet));
+      (await nearestMonth(year, month, "next", inactiveSet, isAdmin)) ||
+      (await nearestMonth(year, month, "prev", inactiveSet, isAdmin));
     if (nearest) redirect(monthHref(nearest.y, nearest.m));
   }
 
@@ -288,8 +315,8 @@ export async function loadCalendarPageData({ year, month, isAdmin, lang = "sr" }
 
   // Pagination for months — preskačemo deaktivovane mesece
   const [prevMonth, nextMonth] = await Promise.all([
-    findNearestMonthWithPromos(year, month, "prev", inactiveSet),
-    findNearestMonthWithPromos(year, month, "next", inactiveSet),
+    nearestMonth(year, month, "prev", inactiveSet, isAdmin),
+    nearestMonth(year, month, "next", inactiveSet, isAdmin),
   ]);
 
   return {
